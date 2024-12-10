@@ -112,7 +112,7 @@ export default function Page() {
       	<ul className="flex space-x-4">
         	<li>
           	<Button
-            	variant={currentView === "Dieta" ? "primary" : "ghost"}
+				variant={currentView === "Dieta" ? "default" : "ghost"}
             	onClick={() => setCurrentView("Dieta")}
           	>
             	Dieta
@@ -120,7 +120,7 @@ export default function Page() {
         	</li>
         	<li>
           	<Button
-            	variant={currentView === "Treino" ? "primary" : "ghost"}
+				variant={currentView === "Treino" ? "default" : "ghost"}
             	onClick={() => setCurrentView("Treino")}
           	>
             	Treino
@@ -128,7 +128,7 @@ export default function Page() {
         	</li>
         	<li>
           	<Button
-            	variant={currentView === "Pesagens" ? "primary" : "ghost"}
+				variant={currentView === "Pesagens" ? "default" : "ghost"}
             	onClick={() => setCurrentView("Pesagens")}
           	>
             	Pesagens
