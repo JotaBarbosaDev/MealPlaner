@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {Separator} from "@/components/ui/separator";
 
 /* -------------------------------------
    Tipos e Interfaces para Dieta
@@ -293,6 +294,16 @@ function Dieta() {
     false
   );
 
+  // ** Estado para lidar com discrepância de calorias/macros em qualquer ação **
+  const [macroMismatchDialogOpen, setMacroMismatchDialogOpen] = useState(false);
+  const [macroMismatchData, setMacroMismatchData] = useState<
+    {
+      label: string;
+      diff: number;
+      color: string; // "green" | "yellow" | "red"
+    }[]
+  >([]);
+
   // Product fields
   const [editProductIndex, setEditProductIndex] = useLocalStorage<
     number | undefined
@@ -350,7 +361,7 @@ function Dieta() {
     number | undefined
   >("editingPlateInMealIndex", undefined);
 
-  // Percentagens manuais
+  // Percentagens manuais (para dividir calorias pelas refeições)
   const [paPerc, setPaPerc] = useLocalStorage<number>("paPerc", 20);
   const [aPerc, setAPerc] = useLocalStorage<number>("aPerc", 30);
   const [lPerc, setLPerc] = useLocalStorage<number>("lPerc", 20);
@@ -371,13 +382,6 @@ function Dieta() {
       {name: "Jantar", plates: []},
     ]);
   }
-
-  /* -------------------------------------------------
-     Funções de Cálculo, Manipulação e Renderização
-  -------------------------------------------------- */
-
-  // ... (A mesma lógica que já tens, mostrada no teu código atual).
-  // Aqui, mantemos tudo e apenas atualizamos a forma de exibir as listas.
 
   /* ------------------------------
      Funções de Cálculo
@@ -406,6 +410,7 @@ function Dieta() {
     };
   }
 
+  // Soma macros do prato
   function sumPlate(plate: Plate) {
     return plate.items.reduce(
       (acc, item) => {
@@ -454,12 +459,81 @@ function Dieta() {
   function plateMatchesMealTarget(plate: Plate) {
     const mt = calculateMealTargets(plate.mealName);
     const sp = sumPlate(plate);
+
+    // Podes ajustar a “tolerância” aqui se desejado
     return (
-      Math.abs(sp.p - mt.p) < 0.5 &&
-      Math.abs(sp.f - mt.f) < 0.5 &&
-      Math.abs(sp.c - mt.c) < 1 &&
-      Math.abs(sp.cal - mt.cal) < 5
+      Math.abs(sp.p - mt.p) < 0.0001 &&
+      Math.abs(sp.f - mt.f) < 0.0001 &&
+      Math.abs(sp.c - mt.c) < 0.0001 &&
+      Math.abs(sp.cal - mt.cal) < 0.0001
     );
+  }
+
+  /**
+   * Calcula as diferenças de cada macro em Kcal e retorna um array com
+   * label, diff e cor para mostrar no dialog.
+   */
+  function calcMacroDifferences(plate: Plate) {
+    const mt = calculateMealTargets(plate.mealName);
+    const sp = sumPlate(plate);
+
+    // Convertemos g de p/c/f em Kcal para comparar
+    const proteinDiffKcal = (sp.p - mt.p) * 4;
+    const carbDiffKcal = (sp.c - mt.c) * 4;
+    const fatDiffKcal = (sp.f - mt.f) * 9;
+    const totalDiffKcal = sp.cal - mt.cal;
+
+    // Função para determinar cor
+    function getColor(diff: number): string {
+      const abs = Math.abs(diff);
+      if (abs <= 50) return "green";
+      if (abs <= 100) return "yellow";
+      return "red";
+    }
+
+    // Formata a diferença em sinal + ou -
+    function formatDiff(val: number): string {
+      if (val > 0) return `+${val.toFixed(1)}kcal`;
+      return `${val.toFixed(1)}kcal`;
+    }
+
+    const data: {
+      label: string;
+      diff: number;
+      color: string;
+    }[] = [];
+
+    // Só exibe cada macro se a diferença for != 0
+    if (proteinDiffKcal !== 0) {
+      data.push({
+        label: `Proteína ${formatDiff(proteinDiffKcal)}`,
+        diff: proteinDiffKcal,
+        color: getColor(proteinDiffKcal),
+      });
+    }
+    if (carbDiffKcal !== 0) {
+      data.push({
+        label: `Hidratos ${formatDiff(carbDiffKcal)}`,
+        diff: carbDiffKcal,
+        color: getColor(carbDiffKcal),
+      });
+    }
+    if (fatDiffKcal !== 0) {
+      data.push({
+        label: `Gordura ${formatDiff(fatDiffKcal)}`,
+        diff: fatDiffKcal,
+        color: getColor(fatDiffKcal),
+      });
+    }
+    if (totalDiffKcal !== 0) {
+      data.push({
+        label: `Calorias ${formatDiff(totalDiffKcal)}`,
+        diff: totalDiffKcal,
+        color: getColor(totalDiffKcal),
+      });
+    }
+
+    return data;
   }
 
   /* ------------------------------
@@ -548,6 +622,10 @@ function Dieta() {
     toast("Produto apagado!");
   }
 
+  /**
+   * Esta função agora lida com a adição de produto ao prato:
+   * se exceder as metas, abre modal com opção de “continuar” ou “ajustar”.
+   */
   function handleAddPlateItemSubmit(e: FormEvent) {
     e.preventDefault();
     if (
@@ -558,19 +636,60 @@ function Dieta() {
       toast("Selecione um produto e insira a quantidade corretamente.");
       return;
     }
+    // Criamos uma cópia do prato para “simular”
     const cp = {...currentPlate};
     cp.items.push({productIndex: addItemProductIndex, grams: addItemGrams});
-    if (!ensurePlateFitsMeal(cp)) {
-      toast(
-        "Não é possível adicionar este produto sem ultrapassar as metas da refeição."
-      );
+
+    // Se as calorias ultrapassam muito, abriremos modal
+    const diffs = calcMacroDifferences(cp);
+    if (diffs.length > 0) {
+      // Há discrepâncias (para mais ou para menos)
+      setMacroMismatchData(diffs);
+
+      // Abrimos um “mini-flow”: se clicar em “Continuar” no modal,
+      // de facto adicionamos o produto; se clicar em “Ajustar”, não adicionamos.
+      setMacroMismatchDialogOpen(true);
+
+      // Guardamos temporariamente o “produto em espera”
+      // e, se o usuário confirmar, aplicamos depois.
+      // Uma forma simples: guardar no state e, no “continuar” do modal,
+      // aplicamos de fato setCurrentPlate(cp).
+      temporaryPlateItem.current = {
+        productIndex: addItemProductIndex,
+        grams: addItemGrams,
+      };
       return;
     }
+
+    // Se chegou aqui sem discrepâncias, adiciona de vez
     setCurrentPlate(cp);
     setAddPlateItemDialogOpen(false);
     setAddItemProductIndex(undefined);
     setAddItemGrams(0);
     toast("Produto adicionado ao prato!");
+  }
+
+  // Vamos guardar temporariamente um item “em espera”, caso usuário clique “Continuar”
+  const temporaryPlateItem = React.useRef<PlateItem | null>(null);
+
+  /**
+   * Ao clicar em “Continuar” dentro do modal de mismatch
+   * quando estávamos a adicionar item no prato.
+   */
+  function proceedWithAddingItemAnyway() {
+    if (temporaryPlateItem.current) {
+      const {productIndex, grams} = temporaryPlateItem.current;
+      const cp = {...currentPlate};
+      cp.items.push({productIndex, grams});
+      setCurrentPlate(cp);
+
+      toast("Produto adicionado mesmo com discrepâncias!");
+      // limpamos e fechamos
+      temporaryPlateItem.current = null;
+      setAddPlateItemDialogOpen(false);
+      setAddItemProductIndex(undefined);
+      setAddItemGrams(0);
+    }
   }
 
   function handleEditPlateItemClick(index: number) {
@@ -587,15 +706,45 @@ function Dieta() {
       toast("Quantidade inválida.");
       return;
     }
+
+    // Vamos simular a edição
     const cp = {...currentPlate};
     cp.items[editPlateItemIndex].grams = plateItemGramsField;
-    if (!ensurePlateFitsMeal(cp)) {
-      toast("Não é possível ajustar essa quantidade sem ultrapassar as metas.");
+
+    // Checamos discrepâncias
+    const diffs = calcMacroDifferences(cp);
+    if (diffs.length > 0) {
+      // Salvar item em “aguardo”
+      temporaryEditPlateItem.current = {
+        itemIndex: editPlateItemIndex,
+        grams: plateItemGramsField,
+      };
+      setMacroMismatchData(diffs);
+      setMacroMismatchDialogOpen(true);
       return;
     }
+
+    // Se sem discrepâncias, conclui
     setCurrentPlate(cp);
     setEditPlateItemDialogOpen(false);
     toast("Quantidade atualizada!");
+  }
+
+  const temporaryEditPlateItem = React.useRef<{
+    itemIndex: number;
+    grams: number;
+  } | null>(null);
+
+  function proceedWithEditingItemAnyway() {
+    if (temporaryEditPlateItem.current) {
+      const {itemIndex, grams} = temporaryEditPlateItem.current;
+      const cp = {...currentPlate};
+      cp.items[itemIndex].grams = grams;
+      setCurrentPlate(cp);
+      toast("Item editado mesmo com discrepâncias!");
+      setEditPlateItemDialogOpen(false);
+      temporaryEditPlateItem.current = null;
+    }
   }
 
   function handleRemovePlateItem(index: number) {
@@ -605,11 +754,32 @@ function Dieta() {
     toast("Produto removido do prato!");
   }
 
+  /**
+   * Mostra o diálogo de discrepâncias (macroMismatchDialog).
+   * Caso o utilizador clique em Ajustar => Cancela
+   * Caso clique em Continuar => Aplica de fato (proceedWithPlate).
+   */
+  function showMacroMismatchDialog(
+    diffs: {
+      label: string;
+      diff: number;
+      color: string;
+    }[]
+  ) {
+    setMacroMismatchData(diffs);
+    setMacroMismatchDialogOpen(true);
+  }
+
+  /**
+   * Finalizar o prato completo.
+   */
   function finalizePlate() {
     if (!currentPlate.name.trim() || currentPlate.items.length === 0) {
       toast("Defina um nome e adicione ao menos um produto ao prato.");
       return;
     }
+
+    // Verifica se excedeu macros completamente
     const mt = calculateMealTargets(currentPlate.mealName);
     const sp = sumPlate(currentPlate);
     const exceeded = [];
@@ -627,12 +797,31 @@ function Dieta() {
       return;
     }
 
+    // Agora, se não "encaixa" 100%…
     if (!plateMatchesMealTarget(currentPlate)) {
-      toast(
-        "Este prato não corresponde exatamente às metas da refeição. Ajuste os itens."
-      );
-      return;
+      const diffs = calcMacroDifferences(currentPlate);
+      if (diffs.length > 0) {
+        showMacroMismatchDialog(diffs);
+        // Precisamos de um “estado” para saber que estamos finalizando o prato
+        // e não apenas adicionando item. Podemos ter outro ref ou bool:
+        setIsFinishingPlate(true);
+        return;
+      }
     }
+
+    // Se estiver tudo certo, prossegue
+    proceedWithPlate();
+  }
+
+  // Para sabermos se estamos finalizando prato ou apenas adicionando item
+  const [isFinishingPlate, setIsFinishingPlate] = useState(false);
+
+  /**
+   * Salva de fato o prato (após o mismatch ou se não houve mismatch).
+   */
+  function proceedWithPlate() {
+    // Se não for mismatch do finalizePlate, reset a flag
+    setIsFinishingPlate(false);
 
     const mealIndex = meals.findIndex((m) => m.name === currentPlate.mealName);
     if (mealIndex === -1) {
@@ -658,6 +847,7 @@ function Dieta() {
       }
     }
 
+    // Decidir se estamos em modo “Editar prato numa refeição” ou “Criar prato”
     if (
       editingMealIndex !== undefined &&
       editingPlateInMealIndex !== undefined
@@ -676,6 +866,7 @@ function Dieta() {
       toast("Prato criado com sucesso!");
     }
 
+    // Limpa e fecha
     setCurrentPlate({name: "", mealName: "Pequeno-Almoço", items: []});
     setCreatePlateDialogOpen(false);
   }
@@ -823,34 +1014,34 @@ function Dieta() {
   return (
     <div className="space-y-6">
       {/* 1) Cartão de Resumo Diário */}
-      <Card className="p-4 space-y-2">
+      <Card className="p-4 space-y-5">
         <h2 className="text-lg font-semibold">Resumo Diário</h2>
         <div className="flex flex-wrap gap-2 text-sm">
           <div className="bg-white rounded p-2 shadow">
-            <strong>Alvo Cal:</strong> {daily.cal.toFixed(1)}
+            <strong>Alvo Calorias:</strong> {daily.cal.toFixed(1)}
           </div>
           <div className="bg-white rounded p-2 shadow">
-            <strong>Alvo HC:</strong> {daily.c.toFixed(1)}
+            <strong>Alvo Hidratos:</strong> {daily.c.toFixed(1)}
           </div>
           <div className="bg-white rounded p-2 shadow">
-            <strong>Alvo P:</strong> {daily.p.toFixed(1)}
+            <strong>Alvo Proteina:</strong> {daily.p.toFixed(1)}
           </div>
           <div className="bg-white rounded p-2 shadow">
-            <strong>Alvo G:</strong> {daily.f.toFixed(1)}
+            <strong>Alvo Gordura:</strong> {daily.f.toFixed(1)}
           </div>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
           <div className="bg-white rounded p-2 shadow">
-            <strong>Atual Cal:</strong> {totals.cal.toFixed(1)}
+            <strong>Atual Calorias:</strong> {totals.cal.toFixed(1)}
           </div>
           <div className="bg-white rounded p-2 shadow">
-            <strong>Atual HC:</strong> {totals.c.toFixed(1)}
+            <strong>Atual Hidratos:</strong> {totals.c.toFixed(1)}
           </div>
           <div className="bg-white rounded p-2 shadow">
-            <strong>Atual P:</strong> {totals.p.toFixed(1)}
+            <strong>Atual Proteina:</strong> {totals.p.toFixed(1)}
           </div>
           <div className="bg-white rounded p-2 shadow">
-            <strong>Atual G:</strong> {totals.f.toFixed(1)}
+            <strong>Atual Gordura:</strong> {totals.f.toFixed(1)}
           </div>
         </div>
       </Card>
@@ -1112,7 +1303,6 @@ function Dieta() {
               onChange={(e) => setProductPField(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -1124,7 +1314,6 @@ function Dieta() {
               onChange={(e) => setProductFField(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -1136,7 +1325,6 @@ function Dieta() {
               onChange={(e) => setProductCField(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -1148,7 +1336,6 @@ function Dieta() {
               onChange={(e) => setProductCalField(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -1335,8 +1522,7 @@ function Dieta() {
                     </ul>
                     <p className="text-sm text-gray-700 mt-2">
                       <strong>Total do Prato:</strong> {cal.toFixed(1)}kcal |
-                      HC:
-                      {c.toFixed(1)}g | P:{p.toFixed(1)}g | G:{f.toFixed(1)}g
+                      HC:{c.toFixed(1)}g | P:{p.toFixed(1)}g | G:{f.toFixed(1)}g
                     </p>
                   </>
                 );
@@ -1345,8 +1531,9 @@ function Dieta() {
           </div>
 
           <div className="mt-2 text-sm text-gray-600">
-            O prato deve corresponder às metas da refeição, garantindo que
-            qualquer prato escolhido seja nutricionalmente equivalente.
+            O prato deve corresponder às metas da refeição, mas pode haver
+            pequenas discrepâncias. Se houver diferenças, surgirá um aviso para
+            Ajustar ou Continuar.
           </div>
 
           <div className="mt-4 space-x-2">
@@ -1446,6 +1633,11 @@ function Dieta() {
               type="number"
               value={addItemGrams}
               onChange={(e) => setAddItemGrams(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <DialogFooter>
               <Button
@@ -1568,8 +1760,7 @@ function Dieta() {
                   <p className="text-xs text-gray-600">
                     Metas: {mealMacros.cal.toFixed(1)}kcal | HC:
                     {mealMacros.c.toFixed(1)}g | P:{mealMacros.p.toFixed(1)}g |
-                    G:
-                    {mealMacros.f.toFixed(1)}g
+                    G:{mealMacros.f.toFixed(1)}g
                   </p>
                   {platesList}
                 </Card>
@@ -1601,6 +1792,76 @@ function Dieta() {
           <div className="mt-2">{renderFullPlanDetail()}</div>
           <DialogFooter>
             <Button onClick={() => setViewPlanDialogOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de discrepâncias de macros */}
+      <Dialog
+        open={macroMismatchDialogOpen}
+        onOpenChange={(open) => {
+          setMacroMismatchDialogOpen(open);
+          if (!open) {
+            // Se fecharmos sem Continuar, cancela a “finalização do prato”
+            // e também limpa os refs de item temporário
+            setIsFinishingPlate(false);
+            temporaryPlateItem.current = null;
+            temporaryEditPlateItem.current = null;
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Diferenças de Calorias/Macros</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <p>
+              As calorias ou macros não estão exatas em relação à meta. Veja
+              abaixo as diferenças:
+            </p>
+            <ul className="list-disc ml-5">
+              {macroMismatchData.map((item, idx) => (
+                <li
+                  key={idx}
+                  style={{color: item.color}}
+                  className="font-semibold"
+                >
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+            <p className="text-gray-600 text-xs">
+              Pode Ajustar para voltar e corrigir os valores ou Continuar para
+              aceitar esta diferença.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                // Fechar o mismatchDialog e NÃO prosseguir
+                setMacroMismatchDialogOpen(false);
+              }}
+            >
+              Ajustar
+            </Button>
+            <Button
+              onClick={() => {
+                setMacroMismatchDialogOpen(false);
+                if (isFinishingPlate) {
+                  // Se estamos a finalizar prato
+                  proceedWithPlate();
+                } else if (temporaryPlateItem.current) {
+                  // Se estávamos a adicionar item
+                  proceedWithAddingItemAnyway();
+                } else if (temporaryEditPlateItem.current) {
+                  // Se estávamos a editar item
+                  proceedWithEditingItemAnyway();
+                }
+              }}
+            >
+              Continuar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1669,7 +1930,6 @@ function Treino() {
       Domingo: "Descanso",
     }
   );
-
 
   /* ------------------------------
      Funções de Exercícios
@@ -2420,7 +2680,6 @@ function Treino() {
                   onChange={(e) => setNewSetReps(Number(e.target.value))}
                   onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                     if (Number(e.target.value) === 0) {
-                      // se o valor é zero, limpa o campo
                       e.target.value = "";
                     }
                   }}
@@ -2434,7 +2693,6 @@ function Treino() {
                   onChange={(e) => setNewSetWeight(Number(e.target.value))}
                   onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                     if (Number(e.target.value) === 0) {
-                      // se o valor é zero, limpa o campo
                       e.target.value = "";
                     }
                   }}
@@ -2710,7 +2968,6 @@ function Pesagens() {
               onChange={(e) => setWeight(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2722,7 +2979,6 @@ function Pesagens() {
               onChange={(e) => setMuscleMassPercent(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2734,7 +2990,6 @@ function Pesagens() {
               onChange={(e) => setMuscleMassKg(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2746,7 +3001,6 @@ function Pesagens() {
               onChange={(e) => setFatMassPercent(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2758,7 +3012,6 @@ function Pesagens() {
               onChange={(e) => setWaterPercent(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2770,7 +3023,6 @@ function Pesagens() {
               onChange={(e) => setHeight(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2782,7 +3034,6 @@ function Pesagens() {
               onChange={(e) => setVisceralFat(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
@@ -2794,7 +3045,6 @@ function Pesagens() {
               onChange={(e) => setMetabolicAge(Number(e.target.value))}
               onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
                 if (Number(e.target.value) === 0) {
-                  // se o valor é zero, limpa o campo
                   e.target.value = "";
                 }
               }}
