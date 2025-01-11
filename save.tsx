@@ -23,7 +23,9 @@ import {
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Tipos e Interfaces para Dieta
+/* -------------------------------------
+   Tipos e Interfaces para Dieta
+--------------------------------------*/
 type MealName = "Pequeno-Almoço" | "Almoço" | "Lanche da Tarde" | "Jantar";
 
 interface Product {
@@ -50,7 +52,9 @@ interface Meal {
   plates: Plate[];
 }
 
-// Tipos e Interfaces para Treino
+/* -------------------------------------
+   Tipos e Interfaces para Treino
+--------------------------------------*/
 interface Exercise {
   name: string;
   series: number;
@@ -73,10 +77,12 @@ type DayOfWeek =
   | "Domingo";
 
 interface WeeklyPlan {
-  [key: string]: string; // Dia da semana -> Nome do Treino ou "Descanso"
+  [key: string]: string; // Dia -> Nome do Treino ou "Descanso"
 }
 
-// ** NOVO ** - Tipagem para registos de treino
+/* -------------------------------------
+   Tipagem para registos de treino
+--------------------------------------*/
 interface TrainingSet {
   reps: number;
   weight: number;
@@ -94,7 +100,9 @@ interface TrainingLogEntry {
   exerciseLogs: ExerciseLog[];
 }
 
-// Tipos e Interfaces para Pesagens
+/* -------------------------------------
+   Tipos e Interfaces para Pesagens
+--------------------------------------*/
 interface Measurement {
   date: string;
   time: string;
@@ -108,13 +116,17 @@ interface Measurement {
   metabolicAge: number;
 }
 
+/* -------------------------------------
+   COMPONENTE PRINCIPAL
+--------------------------------------*/
 export default function Page() {
+  // Tabs principais: Principal, Dieta, Treino e Pesagens
   const [currentView, setCurrentView] = useState<
-    "Dieta" | "Treino" | "Pesagens"
-  >("Dieta");
+    "Principal" | "Dieta" | "Treino" | "Pesagens"
+  >("Principal");
 
   return (
-    <div className="font-sans bg-gray-50 min-h-screen">
+    <div className="font-sans bg-gray-50 h-screen flex flex-col">
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -123,52 +135,108 @@ export default function Page() {
         pauseOnHover={false}
         draggable={false}
       />
-      <header className="bg-green-700 text-white shadow p-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Plano Nutricional + Treino</h1>
-        {/* Menu de Navegação */}
-        <nav>
-          <ul className="flex space-x-4">
-            <li>
-              <Button
-                variant={currentView === "Dieta" ? "default" : "ghost"}
-                onClick={() => setCurrentView("Dieta")}
-              >
-                Dieta
-              </Button>
-            </li>
-            <li>
-              <Button
-                variant={currentView === "Treino" ? "default" : "ghost"}
-                onClick={() => setCurrentView("Treino")}
-              >
-                Treino
-              </Button>
-            </li>
-            <li>
-              <Button
-                variant={currentView === "Pesagens" ? "default" : "ghost"}
-                onClick={() => setCurrentView("Pesagens")}
-              >
-                Pesagens
-              </Button>
-            </li>
-          </ul>
-        </nav>
+
+      {/* Top Bar simples */}
+      <header className="bg-green-700 text-white p-3">
+        <h1 className="text-lg font-bold text-center">
+          Plano Nutricional + Treino
+        </h1>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-8">
+      {/* Conteúdo principal (scroll interno), deixando espaço em baixo para Bottom Nav */}
+      <main className="flex-1 overflow-y-auto p-3 pb-16">
+        {currentView === "Principal" && <Principal />}
         {currentView === "Dieta" && <Dieta />}
         {currentView === "Treino" && <Treino />}
         {currentView === "Pesagens" && <Pesagens />}
       </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center p-2">
+        <Button
+          variant={currentView === "Principal" ? "default" : "outline"}
+          className="text-xs flex-1 mx-1"
+          onClick={() => setCurrentView("Principal")}
+        >
+          Principal
+        </Button>
+        <Button
+          variant={currentView === "Dieta" ? "default" : "outline"}
+          className="text-xs flex-1 mx-1"
+          onClick={() => setCurrentView("Dieta")}
+        >
+          Dieta
+        </Button>
+        <Button
+          variant={currentView === "Treino" ? "default" : "outline"}
+          className="text-xs flex-1 mx-1"
+          onClick={() => setCurrentView("Treino")}
+        >
+          Treino
+        </Button>
+        <Button
+          variant={currentView === "Pesagens" ? "default" : "outline"}
+          className="text-xs flex-1 mx-1"
+          onClick={() => setCurrentView("Pesagens")}
+        >
+          Pesagens
+        </Button>
+      </nav>
     </div>
   );
 }
 
-// ------------------- Seção Dieta -------------------
+/* -------------------------------------
+   SEPARADOR PRINCIPAL (Resumo)
+--------------------------------------*/
+function Principal() {
+  // Exemplo de exibir o “Plano Semanal” no Principal (resumo)
+  const [weeklyPlan] = useLocalStorage<WeeklyPlan>("weeklyPlan", {
+    "Segunda-feira": "Descanso",
+    "Terça-feira": "Descanso",
+    "Quarta-feira": "Descanso",
+    "Quinta-feira": "Descanso",
+    "Sexta-feira": "Descanso",
+    Sábado: "Descanso",
+    Domingo: "Descanso",
+  });
 
+  return (
+    <div className="space-y-6">
+      <Card className="p-4 space-y-4">
+        <h2 className="text-lg font-semibold">Bem-vindo!</h2>
+        <p className="text-sm text-gray-800">
+          Use esta página para apresentar um resumo geral da aplicação, links
+          rápidos ou estatísticas recentes.
+        </p>
+      </Card>
+
+      {/* Plano Semanal (só um resumo) */}
+      <Card className="p-4 space-y-4">
+        <h2 className="text-lg font-semibold">Plano Semanal</h2>
+        <div className="space-y-2">
+          {Object.keys(weeklyPlan).map((day) => (
+            <div
+              key={day}
+              className="p-2 bg-gray-100 rounded text-sm flex justify-between"
+            >
+              <span className="font-semibold">{day}:</span>
+              <span>
+                {weeklyPlan[day] !== "Descanso" ? weeklyPlan[day] : "Descanso"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* -------------------------------------
+   SEÇÃO DIETA (Listas melhoradas)
+--------------------------------------*/
 function Dieta() {
-  // Estados e Lógica da Dieta (Mantidos do Código Original)
+  // ---------- Estados e Lógica da Dieta ----------
   const [calTarget, setCalTarget] = useLocalStorage<number>("calTarget", 1975);
   const [protPercent, setProtPercent] = useLocalStorage<number>(
     "protPercent",
@@ -197,6 +265,7 @@ function Dieta() {
     }
   );
 
+  // Dialog states
   const [metaDialogOpen, setMetaDialogOpen] = useLocalStorage<boolean>(
     "metaDialogOpen",
     false
@@ -224,6 +293,17 @@ function Dieta() {
     false
   );
 
+  // ** Estado para lidar com discrepâncias de calorias/macros em qualquer ação **
+  const [macroMismatchDialogOpen, setMacroMismatchDialogOpen] = useState(false);
+  const [macroMismatchData, setMacroMismatchData] = useState<
+    {
+      label: string;
+      diff: number;
+      color: string; // "green" | "yellow" | "red"
+    }[]
+  >([]);
+
+  // Product fields
   const [editProductIndex, setEditProductIndex] = useLocalStorage<
     number | undefined
   >("editProductIndex", undefined);
@@ -248,6 +328,7 @@ function Dieta() {
     38
   );
 
+  // Plate items
   const [editPlateItemIndex, setEditPlateItemIndex] = useLocalStorage<
     number | undefined
   >("editPlateItemIndex", undefined);
@@ -264,6 +345,7 @@ function Dieta() {
     0
   );
 
+  // Meal & Plate selection
   const [addPlateMealIndex, setAddPlateMealIndex] = useLocalStorage<
     number | undefined
   >("addPlateMealIndex", undefined);
@@ -278,7 +360,7 @@ function Dieta() {
     number | undefined
   >("editingPlateInMealIndex", undefined);
 
-  // Percentagens manuais
+  // Percentagens manuais (para dividir calorias pelas refeições)
   const [paPerc, setPaPerc] = useLocalStorage<number>("paPerc", 20);
   const [aPerc, setAPerc] = useLocalStorage<number>("aPerc", 30);
   const [lPerc, setLPerc] = useLocalStorage<number>("lPerc", 20);
@@ -300,6 +382,9 @@ function Dieta() {
     ]);
   }
 
+  /* ------------------------------
+     Funções de Cálculo
+  -------------------------------*/
   function calculateDailyTargets() {
     const p = ((protPercent / 100) * calTarget) / 4;
     const f = ((fatPercent / 100) * calTarget) / 9;
@@ -316,7 +401,6 @@ function Dieta() {
       if (mealName === "Jantar") return jPerc / 100;
       return 0;
     })();
-
     return {
       p: daily.p * dist,
       f: daily.f * dist,
@@ -325,6 +409,7 @@ function Dieta() {
     };
   }
 
+  // Soma macros do prato
   function sumPlate(plate: Plate) {
     return plate.items.reduce(
       (acc, item) => {
@@ -344,7 +429,6 @@ function Dieta() {
   function ensurePlateFitsMeal(plate: Plate): boolean {
     const mt = calculateMealTargets(plate.mealName);
     const sp = sumPlate(plate);
-    // Agora sem tolerância
     return sp.cal <= mt.cal && sp.p <= mt.p && sp.f <= mt.f && sp.c <= mt.c;
   }
 
@@ -374,14 +458,86 @@ function Dieta() {
   function plateMatchesMealTarget(plate: Plate) {
     const mt = calculateMealTargets(plate.mealName);
     const sp = sumPlate(plate);
+
+    // Podes ajustar a “tolerância” aqui se desejado
     return (
-      Math.abs(sp.p - mt.p) < 0.5 &&
-      Math.abs(sp.f - mt.f) < 0.5 &&
-      Math.abs(sp.c - mt.c) < 1 &&
-      Math.abs(sp.cal - mt.cal) < 5
+      Math.abs(sp.p - mt.p) < 0.0001 &&
+      Math.abs(sp.f - mt.f) < 0.0001 &&
+      Math.abs(sp.c - mt.c) < 0.0001 &&
+      Math.abs(sp.cal - mt.cal) < 0.0001
     );
   }
 
+  /**
+   * Calcula as diferenças de cada macro em Kcal e retorna um array com
+   * label, diff e cor para mostrar no dialog.
+   */
+  function calcMacroDifferences(plate: Plate) {
+    const mt = calculateMealTargets(plate.mealName);
+    const sp = sumPlate(plate);
+
+    // Convertemos g de p/c/f em Kcal para comparar
+    const proteinDiffKcal = (sp.p - mt.p) * 4;
+    const carbDiffKcal = (sp.c - mt.c) * 4;
+    const fatDiffKcal = (sp.f - mt.f) * 9;
+    const totalDiffKcal = sp.cal - mt.cal;
+
+    // Função para determinar cor
+    function getColor(diff: number): string {
+      const abs = Math.abs(diff);
+      if (abs <= 50) return "green";
+      if (abs <= 100) return "yellow";
+      return "red";
+    }
+
+    // Formata a diferença em sinal + ou -
+    function formatDiff(val: number): string {
+      if (val > 0) return `+${val.toFixed(1)}kcal`;
+      return `${val.toFixed(1)}kcal`;
+    }
+
+    const data: {
+      label: string;
+      diff: number;
+      color: string;
+    }[] = [];
+
+    // Só exibe cada macro se a diferença for != 0
+    if (proteinDiffKcal !== 0) {
+      data.push({
+        label: `Proteína ${formatDiff(proteinDiffKcal)}`,
+        diff: proteinDiffKcal,
+        color: getColor(proteinDiffKcal),
+      });
+    }
+    if (carbDiffKcal !== 0) {
+      data.push({
+        label: `Hidratos ${formatDiff(carbDiffKcal)}`,
+        diff: carbDiffKcal,
+        color: getColor(carbDiffKcal),
+      });
+    }
+    if (fatDiffKcal !== 0) {
+      data.push({
+        label: `Gordura ${formatDiff(fatDiffKcal)}`,
+        diff: fatDiffKcal,
+        color: getColor(fatDiffKcal),
+      });
+    }
+    if (totalDiffKcal !== 0) {
+      data.push({
+        label: `Calorias ${formatDiff(totalDiffKcal)}`,
+        diff: totalDiffKcal,
+        color: getColor(totalDiffKcal),
+      });
+    }
+
+    return data;
+  }
+
+  /* ------------------------------
+     Ações (Metas, Produtos, etc.)
+  -------------------------------*/
   function handleUpdateTargets() {
     toast("Metas atualizadas com sucesso!");
     setMetaDialogOpen(false);
@@ -465,6 +621,10 @@ function Dieta() {
     toast("Produto apagado!");
   }
 
+  /**
+   * Esta função agora lida com a adição de produto ao prato:
+   * se exceder as metas, abre modal com opção de “continuar” ou “ajustar”.
+   */
   function handleAddPlateItemSubmit(e: FormEvent) {
     e.preventDefault();
     if (
@@ -475,19 +635,49 @@ function Dieta() {
       toast("Selecione um produto e insira a quantidade corretamente.");
       return;
     }
+    // Criamos uma cópia do prato para “simular”
     const cp = {...currentPlate};
     cp.items.push({productIndex: addItemProductIndex, grams: addItemGrams});
-    if (!ensurePlateFitsMeal(cp)) {
-      toast(
-        "Não é possível adicionar este produto sem ultrapassar as metas da refeição."
-      );
+
+    // Se as calorias ou macros não batem, abrimos modal
+    const diffs = calcMacroDifferences(cp);
+    if (diffs.length > 0) {
+      // Há discrepâncias (para mais ou para menos)
+      setMacroMismatchData(diffs);
+      setMacroMismatchDialogOpen(true);
+      // Guardar temporariamente o “produto em espera”
+      temporaryPlateItem.current = {
+        productIndex: addItemProductIndex,
+        grams: addItemGrams,
+      };
       return;
     }
+
+    // Se chegou aqui sem discrepâncias, adiciona de vez
     setCurrentPlate(cp);
     setAddPlateItemDialogOpen(false);
     setAddItemProductIndex(undefined);
     setAddItemGrams(0);
     toast("Produto adicionado ao prato!");
+  }
+
+  // Vamos guardar temporariamente um item “em espera”, caso o utilizador clique “Continuar”
+  const temporaryPlateItem = React.useRef<PlateItem | null>(null);
+
+  function proceedWithAddingItemAnyway() {
+    if (temporaryPlateItem.current) {
+      const {productIndex, grams} = temporaryPlateItem.current;
+      const cp = {...currentPlate};
+      cp.items.push({productIndex, grams});
+      setCurrentPlate(cp);
+
+      toast("Produto adicionado mesmo com discrepâncias!");
+      // limpar e fechar
+      temporaryPlateItem.current = null;
+      setAddPlateItemDialogOpen(false);
+      setAddItemProductIndex(undefined);
+      setAddItemGrams(0);
+    }
   }
 
   function handleEditPlateItemClick(index: number) {
@@ -504,15 +694,45 @@ function Dieta() {
       toast("Quantidade inválida.");
       return;
     }
+
+    // Vamos simular a edição
     const cp = {...currentPlate};
     cp.items[editPlateItemIndex].grams = plateItemGramsField;
-    if (!ensurePlateFitsMeal(cp)) {
-      toast("Não é possível ajustar essa quantidade sem ultrapassar as metas.");
+
+    // Checamos discrepâncias
+    const diffs = calcMacroDifferences(cp);
+    if (diffs.length > 0) {
+      // Salvar item em “aguardo”
+      temporaryEditPlateItem.current = {
+        itemIndex: editPlateItemIndex,
+        grams: plateItemGramsField,
+      };
+      setMacroMismatchData(diffs);
+      setMacroMismatchDialogOpen(true);
       return;
     }
+
+    // Se sem discrepâncias, conclui
     setCurrentPlate(cp);
     setEditPlateItemDialogOpen(false);
     toast("Quantidade atualizada!");
+  }
+
+  const temporaryEditPlateItem = React.useRef<{
+    itemIndex: number;
+    grams: number;
+  } | null>(null);
+
+  function proceedWithEditingItemAnyway() {
+    if (temporaryEditPlateItem.current) {
+      const {itemIndex, grams} = temporaryEditPlateItem.current;
+      const cp = {...currentPlate};
+      cp.items[itemIndex].grams = grams;
+      setCurrentPlate(cp);
+      toast("Item editado mesmo com discrepâncias!");
+      setEditPlateItemDialogOpen(false);
+      temporaryEditPlateItem.current = null;
+    }
   }
 
   function handleRemovePlateItem(index: number) {
@@ -522,11 +742,29 @@ function Dieta() {
     toast("Produto removido do prato!");
   }
 
+  function showMacroMismatchDialog(
+    diffs: {
+      label: string;
+      diff: number;
+      color: string;
+    }[]
+  ) {
+    setMacroMismatchData(diffs);
+    setMacroMismatchDialogOpen(true);
+  }
+
+  /**
+   * Finalizar o prato completo.
+   */
+  const [isFinishingPlate, setIsFinishingPlate] = useState(false);
+
   function finalizePlate() {
     if (!currentPlate.name.trim() || currentPlate.items.length === 0) {
       toast("Defina um nome e adicione ao menos um produto ao prato.");
       return;
     }
+
+    // Verifica se excedeu macros completamente
     const mt = calculateMealTargets(currentPlate.mealName);
     const sp = sumPlate(currentPlate);
     const exceeded = [];
@@ -544,12 +782,22 @@ function Dieta() {
       return;
     }
 
+    // Agora, se não "encaixa" 100%…
     if (!plateMatchesMealTarget(currentPlate)) {
-      toast(
-        "Este prato não corresponde exatamente às metas da refeição. Ajuste os itens."
-      );
-      return;
+      const diffs = calcMacroDifferences(currentPlate);
+      if (diffs.length > 0) {
+        showMacroMismatchDialog(diffs);
+        setIsFinishingPlate(true);
+        return;
+      }
     }
+
+    proceedWithPlate();
+  }
+
+  function proceedWithPlate() {
+    // Se não for mismatch do finalizePlate, reset a flag
+    setIsFinishingPlate(false);
 
     const mealIndex = meals.findIndex((m) => m.name === currentPlate.mealName);
     if (mealIndex === -1) {
@@ -562,7 +810,6 @@ function Dieta() {
       const firstPlate = meal.plates[0];
       const spCurrent = sumPlate(currentPlate);
       const spFirst = sumPlate(firstPlate);
-
       const diffP = Math.abs(spCurrent.p - spFirst.p);
       const diffF = Math.abs(spCurrent.f - spFirst.f);
       const diffC = Math.abs(spCurrent.c - spFirst.c);
@@ -576,6 +823,7 @@ function Dieta() {
       }
     }
 
+    // Decidir se estamos em modo “Editar prato numa refeição” ou “Criar prato”
     if (
       editingMealIndex !== undefined &&
       editingPlateInMealIndex !== undefined
@@ -594,6 +842,7 @@ function Dieta() {
       toast("Prato criado com sucesso!");
     }
 
+    // Limpa e fecha
     setCurrentPlate({name: "", mealName: "Pequeno-Almoço", items: []});
     setCreatePlateDialogOpen(false);
   }
@@ -629,6 +878,9 @@ function Dieta() {
     toast("Prato removido da refeição!");
   }
 
+  /* ------------------------------
+     Renderização de Planos
+  -------------------------------*/
   function calculateTotals() {
     let totalP = 0,
       totalF = 0,
@@ -653,66 +905,55 @@ function Dieta() {
     let anyPlate = false;
 
     const mealElements = meals.map((m, i) => {
-      let content;
       if (m.plates.length === 0) {
-        content = (
-          <p className="text-sm text-gray-500">Nenhum prato nesta refeição.</p>
-        );
-      } else {
-        const note = (
-          <p className="text-sm text-blue-600 mt-2">
-            Todos os pratos desta refeição fornecem exatamente as mesmas macros.
-          </p>
-        );
-        content = (
-          <>
-            {m.plates.map((pl, j) => {
-              anyPlate = true;
-              const sp = sumPlate(pl);
-              const productLines = pl.items.map((it, k) => {
-                const prod = products[it.productIndex];
-                const factor = it.grams / 100;
-                const pVal = prod.p * factor;
-                const fVal = prod.f * factor;
-                const cVal = prod.c * factor;
-                const calVal = prod.cal * factor;
-                return (
-                  <li key={k} className="text-sm mb-1">
-                    {prod.name} {it.grams.toFixed(1)}g (HC:{cVal.toFixed(1)}g |
-                    P:
-                    {pVal.toFixed(1)}g | G:{fVal.toFixed(1)}g | Cal:
-                    {calVal.toFixed(1)}kcal)
-                  </li>
-                );
-              });
-
-              return (
-                <div className="border-b border-gray-300 py-2 mb-2" key={j}>
-                  <h4 className="text-gray-700 font-semibold">{pl.name}</h4>
-                  <ul className="mb-2 list-none p-0">{productLines}</ul>
-                  <div className="macro-line">
-                    <strong>Prato:</strong> {sp.cal.toFixed(1)}kcal | HC:
-                    {sp.c.toFixed(1)}g | P:{sp.p.toFixed(1)}g | G:
-                    {sp.f.toFixed(1)}g
-                  </div>
-                </div>
-              );
-            })}
-            {note}
-          </>
+        return (
+          <Card key={i} className="p-3 mb-2 bg-white">
+            <h3 className="font-semibold text-green-700">{m.name}</h3>
+            <p className="text-sm text-gray-500">
+              Nenhum prato nesta refeição.
+            </p>
+          </Card>
         );
       }
 
+      // Se há pratos
+      const platesList = m.plates.map((pl, j) => {
+        anyPlate = true;
+        const sp = sumPlate(pl);
+        return (
+          <div
+            key={j}
+            className="border-b border-gray-300 pb-2 mb-2 last:border-none last:pb-0 last:mb-0"
+          >
+            <h4 className="text-sm font-semibold text-gray-700">{pl.name}</h4>
+            {pl.items.map((it, k) => {
+              const prod = products[it.productIndex];
+              const factor = it.grams / 100;
+              const pVal = prod.p * factor;
+              const fVal = prod.f * factor;
+              const cVal = prod.c * factor;
+              const calVal = prod.cal * factor;
+              return (
+                <p key={k} className="text-xs text-gray-600 ml-2">
+                  {prod.name} – {it.grams.toFixed(1)}g | HC:{cVal.toFixed(1)}g |
+                  P:{pVal.toFixed(1)}g | G:{fVal.toFixed(1)}g | Cal:
+                  {calVal.toFixed(1)}
+                </p>
+              );
+            })}
+            <p className="text-xs text-gray-700 mt-1">
+              <strong>Subtotal:</strong> {sp.cal.toFixed(1)}kcal | HC:
+              {sp.c.toFixed(1)}g | P:{sp.p.toFixed(1)}g | G:{sp.f.toFixed(1)}g
+            </p>
+          </div>
+        );
+      });
+
       return (
-        <div
-          className="bg-gray-50 border border-gray-300 rounded p-4 mb-4"
-          key={i}
-        >
-          <h3 className="text-lg font-semibold text-green-600 border-b border-gray-300 pb-2 mb-2">
-            {m.name}
-          </h3>
-          {content}
-        </div>
+        <Card key={i} className="p-3 mb-2 bg-white">
+          <h3 className="font-semibold text-green-700">{m.name}</h3>
+          <div className="mt-2">{platesList}</div>
+        </Card>
       );
     });
 
@@ -720,23 +961,13 @@ function Dieta() {
     if (anyPlate) {
       const totals = calculateTotals();
       totalLine = (
-        <>
-          <h4 className="font-semibold mt-4">Total Diário Garantido</h4>
-          <p className="text-sm text-gray-600 mb-2">
-            Independentemente da escolha de pratos, o resultado final será
-            sempre o mesmo.
-          </p>
-          <div className="macro-line">
+        <Card className="p-3 bg-white mt-2">
+          <h4 className="font-semibold text-base">Total Diário</h4>
+          <p className="text-sm text-gray-700 mt-1">
             {totals.cal.toFixed(1)} kcal | HC:{totals.c.toFixed(1)}g | P:
             {totals.p.toFixed(1)}g | G:{totals.f.toFixed(1)}g
-          </div>
-        </>
-      );
-    } else {
-      mealElements.push(
-        <p key="noplates" className="text-sm text-gray-500">
-          Nenhum prato em qualquer refeição.
-        </p>
+          </p>
+        </Card>
       );
     }
 
@@ -748,67 +979,64 @@ function Dieta() {
     );
   }
 
+  /* ------------------------------
+     Renderização final da secção Dieta
+  -------------------------------*/
   const daily = calculateDailyTargets();
   const totals = calculateTotals();
   const totalPerc = paPerc + aPerc + lPerc + jPerc;
 
   return (
-    <div>
-      {/* Resumo Diário */}
-      <Card className="p-4 space-y-4 shadow">
-        <h2 className="text-xl font-semibold mb-2">Resumo Diário</h2>
-        <div>
-          <p className="font-semibold mb-1">Objetivo Diário:</p>
-          <div className="flex flex-wrap gap-3">
-            <div className="bg-white rounded p-2 shadow">
-              <strong>Cal:</strong> {daily.cal.toFixed(1)} kcal
-            </div>
-            <div className="bg-white rounded p-2 shadow">
-              <strong>HC:</strong> {daily.c.toFixed(1)} g
-            </div>
-            <div className="bg-white rounded p-2 shadow">
-              <strong>P:</strong> {daily.p.toFixed(1)} g
-            </div>
-            <div className="bg-white rounded p-2 shadow">
-              <strong>G:</strong> {daily.f.toFixed(1)} g
-            </div>
+    <div className="space-y-6">
+      {/* 1) Cartão de Resumo Diário */}
+      <Card className="p-4 space-y-5">
+        <h2 className="text-lg font-semibold">Resumo Diário</h2>
+        <div className="flex flex-wrap gap-2 text-sm">
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Alvo Calorias:</strong> {daily.cal.toFixed(1)}
+          </div>
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Alvo Hidratos:</strong> {daily.c.toFixed(1)}
+          </div>
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Alvo Proteina:</strong> {daily.p.toFixed(1)}
+          </div>
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Alvo Gordura:</strong> {daily.f.toFixed(1)}
           </div>
         </div>
-        <div>
-          <p className="font-semibold mt-4 mb-1">Atual:</p>
-          <div className="flex flex-wrap gap-3">
-            <div className="bg-white rounded p-2 shadow">
-              <strong>Cal:</strong> {totals.cal.toFixed(1)} kcal
-            </div>
-            <div className="bg-white rounded p-2 shadow">
-              <strong>HC:</strong> {totals.c.toFixed(1)} g
-            </div>
-            <div className="bg-white rounded p-2 shadow">
-              <strong>P:</strong> {totals.p.toFixed(1)} g
-            </div>
-            <div className="bg-white rounded p-2 shadow">
-              <strong>G:</strong> {totals.f.toFixed(1)} g
-            </div>
+        <div className="flex flex-wrap gap-2 text-sm">
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Atual Calorias:</strong> {totals.cal.toFixed(1)}
+          </div>
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Atual Hidratos:</strong> {totals.c.toFixed(1)}
+          </div>
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Atual Proteina:</strong> {totals.p.toFixed(1)}
+          </div>
+          <div className="bg-white rounded p-2 shadow">
+            <strong>Atual Gordura:</strong> {totals.f.toFixed(1)}
           </div>
         </div>
       </Card>
 
-      {/* Limites por Refeição */}
-      <Card className="p-4 space-y-4 shadow">
-        <h2 className="text-xl font-semibold mb-2">Limites por Refeição</h2>
+      {/* 2) Cartão de Limites por Refeição */}
+      <Card className="p-4 space-y-4">
+        <h2 className="text-lg font-semibold">Limites por Refeição</h2>
         <p className="text-sm text-gray-600">
           Cada refeição tem limites baseados nas percentagens definidas no
-          final. Ajuste as percentagens manualmente ao fim da página.
+          final.
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm mt-4">
+        <div className="overflow-x-auto text-sm">
+          <table className="w-full mt-2">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-2">Refeição</th>
-                <th className="text-left p-2">Cal (kcal)</th>
-                <th className="text-left p-2">HC (g)</th>
-                <th className="text-left p-2">P (g)</th>
-                <th className="text-left p-2">G (g)</th>
+                <th className="p-2 text-left">Refeição</th>
+                <th className="p-2 text-left">Cal</th>
+                <th className="p-2 text-left">HC</th>
+                <th className="p-2 text-left">P</th>
+                <th className="p-2 text-left">G</th>
               </tr>
             </thead>
             <tbody>
@@ -829,51 +1057,47 @@ function Dieta() {
         </div>
       </Card>
 
-      {/* Botões */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Button onClick={() => setMetaDialogOpen(true)} className="w-full">
-          Gerir Metas
-        </Button>
-        <Button onClick={() => setProductDialogOpen(true)} className="w-full">
-          Gerir Produtos
-        </Button>
-        <Button
-          onClick={() => {
-            setEditingMealIndex(undefined);
-            setEditingPlateInMealIndex(undefined);
-            setCurrentPlate({
-              name: "",
-              mealName: "Pequeno-Almoço",
-              items: [],
-            });
-            setCreatePlateDialogOpen(true);
-          }}
-          className="w-full"
-        >
-          Criar Prato
-        </Button>
-        <Button onClick={() => setMealDialogOpen(true)} className="w-full">
-          Gerir Refeições
-        </Button>
-        <Button onClick={() => setViewPlanDialogOpen(true)} className="w-full">
-          Ver Plano Atual
-        </Button>
-      </div>
+      {/* 3) Cartão de Ações Rápidas */}
+      <Card className="p-4 space-y-2">
+        <h2 className="text-lg font-semibold mb-2">Ações Rápidas</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <Button onClick={() => setMetaDialogOpen(true)}>Gerir Metas</Button>
+          <Button onClick={() => setProductDialogOpen(true)}>
+            Gerir Produtos
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingMealIndex(undefined);
+              setEditingPlateInMealIndex(undefined);
+              setCurrentPlate({
+                name: "",
+                mealName: "Pequeno-Almoço",
+                items: [],
+              });
+              setCreatePlateDialogOpen(true);
+            }}
+          >
+            Criar Prato
+          </Button>
+          <Button onClick={() => setMealDialogOpen(true)}>
+            Gerir Refeições
+          </Button>
+          <Button onClick={() => setViewPlanDialogOpen(true)}>
+            Plano Atual
+          </Button>
+        </div>
+      </Card>
 
-      {/* Ajuste das Percentagens no final */}
-      <Card className="p-4 space-y-4 shadow">
-        <h2 className="text-xl font-semibold">
-          Ajustar Percentagens Manualmente
-        </h2>
+      {/* 4) Cartão de Ajuste de Percentagens */}
+      <Card className="p-4 space-y-2">
+        <h2 className="text-lg font-semibold">Percentagens por Refeição</h2>
         <p className="text-sm text-gray-600">
-          Ajuste as percentagens de calorias para cada refeição manualmente. A
-          soma deve ser 100%. Você decide onde colocar as percentagens
-          retiradas.
+          Ajuste a distribuição (em %) das calorias diárias para cada refeição.
+          A soma deve ser 100%.
         </p>
-
-        <div className="mt-4 space-y-4">
+        <div className="space-y-3 mt-2">
           <div>
-            <Label>Pequeno-Almoço: {paPerc}%</Label>
+            <Label className="text-sm">Pequeno-Almoço: {paPerc}%</Label>
             <input
               type="range"
               min={0}
@@ -884,7 +1108,7 @@ function Dieta() {
             />
           </div>
           <div>
-            <Label>Almoço: {aPerc}%</Label>
+            <Label className="text-sm">Almoço: {aPerc}%</Label>
             <input
               type="range"
               min={0}
@@ -895,7 +1119,7 @@ function Dieta() {
             />
           </div>
           <div>
-            <Label>Lanche da Tarde: {lPerc}%</Label>
+            <Label className="text-sm">Lanche da Tarde: {lPerc}%</Label>
             <input
               type="range"
               min={0}
@@ -906,7 +1130,7 @@ function Dieta() {
             />
           </div>
           <div>
-            <Label>Jantar: {jPerc}%</Label>
+            <Label className="text-sm">Jantar: {jPerc}%</Label>
             <input
               type="range"
               min={0}
@@ -916,17 +1140,14 @@ function Dieta() {
               className="w-full"
             />
           </div>
-        </div>
-
-        <p className="text-sm mt-2">Soma atual: {totalPerc}%</p>
-        {totalPerc !== 100 && (
-          <p className="text-sm text-red-600">
-            A soma não é 100%. Ajuste manualmente para totalizar 100%.
+          <p className="text-xs mt-1">
+            Soma atual: {totalPerc}%{" "}
+            {totalPerc !== 100 && (
+              <span className="text-red-600">— Ajuste para somar 100%</span>
+            )}
           </p>
-        )}
+        </div>
       </Card>
-
-      {/* Diálogos */}
 
       {/* Dialog Metas */}
       <Dialog open={metaDialogOpen} onOpenChange={setMetaDialogOpen}>
@@ -994,13 +1215,13 @@ function Dieta() {
               Adicionar Produto
             </Button>
             {products.length === 0 ? (
-              <p>Nenhum produto.</p>
+              <p>Nenhum produto cadastrado.</p>
             ) : (
-              <ul className="space-y-2">
+              <div className="space-y-2">
                 {products.map((p, i) => (
-                  <li
+                  <Card
                     key={i}
-                    className="border p-2 rounded bg-white text-sm flex items-center justify-between"
+                    className="p-2 bg-white text-sm flex items-center justify-between"
                   >
                     <div>
                       <strong>{p.name}</strong>
@@ -1009,21 +1230,23 @@ function Dieta() {
                     </div>
                     <div className="space-x-2">
                       <Button
+                        size="sm"
                         variant="secondary"
                         onClick={() => handleEditProductClick(i)}
                       >
                         Editar
                       </Button>
                       <Button
+                        size="sm"
                         variant="destructive"
                         onClick={() => handleDeleteProduct(i)}
                       >
                         Apagar
                       </Button>
                     </div>
-                  </li>
+                  </Card>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
           <DialogFooter>
@@ -1042,34 +1265,54 @@ function Dieta() {
             <DialogTitle>Adicionar Produto</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAddProductSubmit} className="space-y-2">
-            <Label>Nome:</Label>
+            <Label>Nome do Produto:</Label>
             <Input
               value={productNameField}
               onChange={(e) => setProductNameField(e.target.value)}
             />
-            <Label>Proteína (P/100g):</Label>
+            <Label>Proteína (g/100g):</Label>
             <Input
               type="number"
               value={productPField}
               onChange={(e) => setProductPField(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
-            <Label>Gordura (G/100g):</Label>
+            <Label>Gordura (g/100g):</Label>
             <Input
               type="number"
               value={productFField}
               onChange={(e) => setProductFField(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
-            <Label>Carboidrato (HC/100g):</Label>
+            <Label>Carboidrato (g/100g):</Label>
             <Input
               type="number"
               value={productCField}
               onChange={(e) => setProductCField(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
-            <Label>Calorias (Cal/100g):</Label>
+            <Label>Calorias (kcal/100g):</Label>
             <Input
               type="number"
               value={productCalField}
               onChange={(e) => setProductCalField(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <DialogFooter>
               <Button
@@ -1094,30 +1337,30 @@ function Dieta() {
             <DialogTitle>Editar Produto</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEditProductSubmit} className="space-y-2">
-            <Label>Nome:</Label>
+            <Label>Nome do Produto:</Label>
             <Input
               value={productNameField}
               onChange={(e) => setProductNameField(e.target.value)}
             />
-            <Label>Proteína (P/100g):</Label>
+            <Label>Proteína (g/100g):</Label>
             <Input
               type="number"
               value={productPField}
               onChange={(e) => setProductPField(Number(e.target.value))}
             />
-            <Label>Gordura (G/100g):</Label>
+            <Label>Gordura (g/100g):</Label>
             <Input
               type="number"
               value={productFField}
               onChange={(e) => setProductFField(Number(e.target.value))}
             />
-            <Label>Carboidrato (HC/100g):</Label>
+            <Label>Carboidrato (g/100g):</Label>
             <Input
               type="number"
               value={productCField}
               onChange={(e) => setProductCField(Number(e.target.value))}
             />
-            <Label>Calorias (Cal/100g):</Label>
+            <Label>Calorias (kcal/100g):</Label>
             <Input
               type="number"
               value={productCalField}
@@ -1141,6 +1384,7 @@ function Dieta() {
         open={createPlateDialogOpen}
         onOpenChange={(open) => {
           if (!open) {
+            // Cancelar a criação/edição do prato
             setEditingMealIndex(undefined);
             setEditingPlateInMealIndex(undefined);
             setCurrentPlate({
@@ -1162,18 +1406,17 @@ function Dieta() {
             </DialogTitle>
           </DialogHeader>
 
-          {/* Exibir metas da refeição escolhida */}
-          {currentPlate.mealName &&
-            (() => {
-              const mt = calculateMealTargets(currentPlate.mealName);
-              return (
-                <p className="text-sm text-gray-600 mb-2">
-                  Metas da Refeição ({currentPlate.mealName}):{" "}
-                  {mt.cal.toFixed(1)}kcal | HC:{mt.c.toFixed(1)}g | P:
-                  {mt.p.toFixed(1)}g | G:{mt.f.toFixed(1)}g
-                </p>
-              );
-            })()}
+          {/* Metas da refeição escolhida */}
+          {currentPlate.mealName && (
+            <p className="text-sm text-gray-600 mb-2">
+              Metas da Refeição ({currentPlate.mealName}):{" "}
+              {calculateMealTargets(currentPlate.mealName).cal.toFixed(1)}
+              kcal | HC:
+              {calculateMealTargets(currentPlate.mealName).c.toFixed(1)}g | P:
+              {calculateMealTargets(currentPlate.mealName).p.toFixed(1)}g | G:
+              {calculateMealTargets(currentPlate.mealName).f.toFixed(1)}g
+            </p>
+          )}
 
           <Label>Nome do Prato:</Label>
           <Input
@@ -1205,7 +1448,7 @@ function Dieta() {
           <div className="mt-4">
             <h3 className="font-semibold mb-2">Produtos no Prato</h3>
             {currentPlate.items.length === 0 ? (
-              <p>Nenhum produto no prato.</p>
+              <p className="text-sm text-gray-700">Nenhum produto no prato.</p>
             ) : (
               (() => {
                 let {p, f, c, cal} = sumPlate(currentPlate);
@@ -1220,53 +1463,56 @@ function Dieta() {
                         const cVal = prod.c * factor;
                         const calVal = prod.cal * factor;
                         return (
-                          <li
+                          <Card
                             key={ii}
-                            className="border p-2 rounded bg-white text-sm flex items-center justify-between"
+                            className="p-2 bg-white text-sm flex items-center justify-between"
                           >
                             <div>
-                              <strong>{prod.name}</strong>:{" "}
+                              <strong>{prod.name}</strong> –{" "}
                               {it.grams.toFixed(1)}g
                               <br />
                               HC:{cVal.toFixed(1)}g | P:{pVal.toFixed(1)}g | G:
-                              {fVal.toFixed(1)}g | Cal:{calVal.toFixed(1)}kcal
+                              {fVal.toFixed(1)}g | Cal:{calVal.toFixed(1)}
                             </div>
                             <div className="space-x-2">
                               <Button
+                                size="sm"
                                 variant="secondary"
                                 onClick={() => handleEditPlateItemClick(ii)}
                               >
                                 Editar
                               </Button>
                               <Button
+                                size="sm"
                                 variant="destructive"
                                 onClick={() => handleRemovePlateItem(ii)}
                               >
                                 Remover
                               </Button>
                             </div>
-                          </li>
+                          </Card>
                         );
                       })}
                     </ul>
-                    <div className="macro-line mt-2">
+                    <p className="text-sm text-gray-700 mt-2">
                       <strong>Total do Prato:</strong> {cal.toFixed(1)}kcal |
                       HC:{c.toFixed(1)}g | P:{p.toFixed(1)}g | G:{f.toFixed(1)}g
-                    </div>
+                    </p>
                   </>
                 );
               })()
             )}
           </div>
 
-          <p className="text-sm text-gray-600">
-            O prato deve corresponder às metas da refeição, assegurando a
-            isonomia nutricional.
-          </p>
+          <div className="mt-2 text-sm text-gray-600">
+            O prato deve corresponder às metas da refeição, mas pode haver
+            pequenas discrepâncias. Se houver diferenças, surgirá um aviso para
+            Ajustar ou Continuar.
+          </div>
 
           <div className="mt-4 space-x-2">
             <Button onClick={() => setAddPlateItemDialogOpen(true)}>
-              Adicionar Produto ao Prato
+              Adicionar Produto
             </Button>
             <Button onClick={finalizePlate}>
               {editingMealIndex !== undefined &&
@@ -1342,7 +1588,7 @@ function Dieta() {
           <form onSubmit={handleAddPlateItemSubmit} className="space-y-2">
             <Label>Produto:</Label>
             <select
-              className="border rounded p-1 w-full"
+              className="border rounded p-1 w-full text-sm"
               onChange={(e) =>
                 setAddItemProductIndex(
                   e.target.value === "" ? undefined : Number(e.target.value)
@@ -1361,6 +1607,11 @@ function Dieta() {
               type="number"
               value={addItemGrams}
               onChange={(e) => setAddItemGrams(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <DialogFooter>
               <Button
@@ -1382,13 +1633,13 @@ function Dieta() {
             <DialogTitle>Gerir Refeições</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-gray-600">
-            Cada refeição deve conter apenas pratos com macros idênticas. Assim,
-            qualquer prato escolhido fornece sempre as mesmas macros.
+            Cada refeição só deve ter pratos idênticos em macros, para garantir
+            isonomia.
           </p>
           <div className="space-y-2 mt-2">
-            <Label>Refeição (para adicionar prato):</Label>
+            <Label className="text-sm">Refeição (para adicionar prato):</Label>
             <select
-              className="border rounded p-1 w-full"
+              className="border rounded p-1 w-full text-sm"
               onChange={(e) =>
                 setAddPlateMealIndex(
                   e.target.value === "" ? undefined : parseInt(e.target.value)
@@ -1403,9 +1654,9 @@ function Dieta() {
               ))}
             </select>
 
-            <Label>Prato (a adicionar à refeição):</Label>
+            <Label className="text-sm">Prato (a adicionar):</Label>
             <select
-              className="border rounded p-1 w-full"
+              className="border rounded p-1 w-full text-sm"
               onChange={(e) =>
                 setAddPlatePlateIndex(
                   e.target.value === "" ? undefined : parseInt(e.target.value)
@@ -1420,86 +1671,73 @@ function Dieta() {
               ))}
             </select>
 
-            <Button onClick={addPlateToMealFromUI}>
-              Adicionar Prato à Refeição
-            </Button>
+            <Button onClick={addPlateToMealFromUI}>Adicionar Prato</Button>
           </div>
 
           <hr className="my-4" />
 
           <div className="space-y-4">
             <h3 className="font-semibold text-lg">
-              Refeições e seus Pratos (Iso-nutri)
+              Refeições &amp; Pratos (Iso-nutri)
             </h3>
             {meals.map((m, mi) => {
               const mealMacros = calculateMealTargets(m.name);
-              const mealInfo = (
-                <p className="text-sm text-gray-600 mb-2">
-                  Metas da Refeição: {mealMacros.cal.toFixed(1)}kcal | HC:
-                  {mealMacros.c.toFixed(1)}g | P:{mealMacros.p.toFixed(1)}g | G:
-                  {mealMacros.f.toFixed(1)}g
-                </p>
-              );
-
-              const mealContent =
-                m.plates.length === 0 ? (
-                  <p>Nenhum prato nesta refeição.</p>
-                ) : (
-                  <>
-                    {mealInfo}
-                    <ul className="space-y-2">
-                      {m.plates.map((pl, pi) => {
-                        const {p, f, c, cal} = sumPlate(pl);
-                        return (
-                          <li
-                            key={pi}
-                            className="border rounded p-2 bg-gray-50 flex items-center justify-between"
-                          >
-                            <div className="text-sm">
-                              <strong>{pl.name}</strong> ({pl.mealName})
-                              <br />
-                              HC:{c.toFixed(1)}g | P:{p.toFixed(1)}g | G:
-                              {f.toFixed(1)}g | Cal:{cal.toFixed(1)}kcal
-                            </div>
-                            <div className="space-x-2">
-                              <Button
-                                variant="secondary"
-                                onClick={() => {
-                                  setEditingMealIndex(mi);
-                                  setEditingPlateInMealIndex(pi);
-                                  setCurrentPlate({...pl});
-                                  setCreatePlateDialogOpen(true);
-                                }}
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                variant="destructive"
-                                onClick={() =>
-                                  handleRemovePlateFromMeal(mi, pi)
-                                }
-                              >
-                                Apagar
-                              </Button>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                    <p className="text-sm text-blue-500 mt-2">
-                      Todos os pratos desta refeição são idênticos em macros,
-                      garantindo resultados previsíveis.
-                    </p>
-                  </>
+              if (m.plates.length === 0) {
+                return (
+                  <Card key={mi} className="p-3 bg-white">
+                    <h4 className="font-semibold text-green-700">{m.name}</h4>
+                    <p>Nenhum prato nesta refeição.</p>
+                  </Card>
                 );
-
+              }
+              // Se há pratos
+              const platesList = m.plates.map((pl, pi) => {
+                const {p, f, c, cal} = sumPlate(pl);
+                return (
+                  <Card
+                    key={pi}
+                    className="p-2 bg-gray-50 flex items-center justify-between mb-2 last:mb-0"
+                  >
+                    <div className="text-sm">
+                      <strong>{pl.name}</strong> ({pl.mealName})
+                      <br />
+                      Cal:{cal.toFixed(1)} | HC:{c.toFixed(1)}g | P:
+                      {p.toFixed(1)}g | G:{f.toFixed(1)}g
+                    </div>
+                    <div className="space-x-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setEditingMealIndex(mi);
+                          setEditingPlateInMealIndex(pi);
+                          setCurrentPlate({...pl});
+                          setCreatePlateDialogOpen(true);
+                        }}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleRemovePlateFromMeal(mi, pi)}
+                      >
+                        Apagar
+                      </Button>
+                    </div>
+                  </Card>
+                );
+              });
               return (
-                <div key={mi} className="border rounded p-2 bg-white">
-                  <h4 className="font-semibold text-green-700 mb-2">
-                    {m.name}
-                  </h4>
-                  {mealContent}
-                </div>
+                <Card key={mi} className="p-3 bg-white space-y-2">
+                  <h4 className="font-semibold text-green-700">{m.name}</h4>
+                  <p className="text-xs text-gray-600">
+                    Metas: {mealMacros.cal.toFixed(1)}kcal | HC:
+                    {mealMacros.c.toFixed(1)}g | P:{mealMacros.p.toFixed(1)}g |
+                    G:{mealMacros.f.toFixed(1)}g
+                  </p>
+                  {platesList}
+                </Card>
               );
             })}
           </div>
@@ -1521,14 +1759,80 @@ function Dieta() {
           <DialogHeader>
             <DialogTitle>Plano Atual</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600 mb-2">
-            Este plano foi estruturado para que, em cada refeição, todos os
-            pratos disponíveis tenham o mesmo perfil nutricional. Assim,
-            qualquer combinação diária resultará nas mesmas macros e calorias.
+          <p className="text-sm text-gray-600">
+            Aqui estão todas as refeições e pratos criados. Cada refeição apenas
+            aceita pratos idênticos em macros, garantindo intercambialidade.
           </p>
-          {renderFullPlanDetail()}
+          <div className="mt-2">{renderFullPlanDetail()}</div>
           <DialogFooter>
             <Button onClick={() => setViewPlanDialogOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de discrepâncias de macros */}
+      <Dialog
+        open={macroMismatchDialogOpen}
+        onOpenChange={(open) => {
+          setMacroMismatchDialogOpen(open);
+          if (!open) {
+            // Se fecharmos sem Continuar, cancela a “finalização do prato”
+            // e também limpa os refs de item temporário
+            setIsFinishingPlate(false);
+            temporaryPlateItem.current = null;
+            temporaryEditPlateItem.current = null;
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Diferenças de Calorias/Macros</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm">
+            <p>
+              As calorias ou macros não estão exatas em relação à meta. Veja
+              abaixo as diferenças:
+            </p>
+            <ul className="list-disc ml-5">
+              {macroMismatchData.map((item, idx) => (
+                <li
+                  key={idx}
+                  style={{color: item.color}}
+                  className="font-semibold"
+                >
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+            <p className="text-gray-600 text-xs">
+              Pode Ajustar para voltar e corrigir os valores ou Continuar para
+              aceitar esta diferença.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                // Fechar o mismatchDialog e NÃO prosseguir
+                setMacroMismatchDialogOpen(false);
+              }}
+            >
+              Ajustar
+            </Button>
+            <Button
+              onClick={() => {
+                setMacroMismatchDialogOpen(false);
+                if (isFinishingPlate) {
+                  proceedWithPlate();
+                } else if (temporaryPlateItem.current) {
+                  proceedWithAddingItemAnyway();
+                } else if (temporaryEditPlateItem.current) {
+                  proceedWithEditingItemAnyway();
+                }
+              }}
+            >
+              Continuar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1536,8 +1840,9 @@ function Dieta() {
   );
 }
 
-// ------------------- Seção Treino -------------------
-
+/* -------------------------------------
+   SEÇÃO TREINO (Listas melhoradas)
+--------------------------------------*/
 function Treino() {
   // Estados para Exercícios
   const [exercises, setExercises] = useLocalStorage<Exercise[]>(
@@ -1583,7 +1888,7 @@ function Treino() {
   );
   const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
 
-  // Estados para Plano Semanal
+  // Plano Semanal
   const [weeklyPlan, setWeeklyPlan] = useLocalStorage<WeeklyPlan>(
     "weeklyPlan",
     {
@@ -1597,24 +1902,9 @@ function Treino() {
     }
   );
 
-  // ** NOVO ** Estados e Lógica para registos de treino
-  const [trainingLogs, setTrainingLogs] = useLocalStorage<TrainingLogEntry[]>(
-    "trainingLogs",
-    []
-  );
-  const [showWeeklyTraining, setShowWeeklyTraining] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
-
-  // Para registar séries de cada exercício:
-  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
-  const [exerciseLogDialogOpen, setExerciseLogDialogOpen] = useState(false);
-
-  // Para adicionar ou editar sets:
-  const [newSetReps, setNewSetReps] = useState(0);
-  const [newSetWeight, setNewSetWeight] = useState(0);
-  const [editSetIndex, setEditSetIndex] = useState<number | null>(null);
-
-  // Funções para Exercícios
+  /* ------------------------------
+     Funções de Exercícios
+  -------------------------------*/
   function handleAddExerciseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!exerciseName.trim()) {
@@ -1678,7 +1968,9 @@ function Treino() {
     setExercisePause(60);
   }
 
-  // Funções para Treinos
+  /* ------------------------------
+     Funções de Treinos
+  -------------------------------*/
   function handleAddWorkoutSubmit(e: FormEvent) {
     e.preventDefault();
     if (!workoutName.trim()) {
@@ -1700,11 +1992,15 @@ function Treino() {
     toast("Treino adicionado com sucesso!");
   }
 
+  // >>> Ajuste principal aqui: localiza o índice do exercício pelo nome, não pelo objeto <<<
   function handleEditWorkoutClick(index: number) {
     const wt = workouts[index];
     setEditWorkoutIndex(index);
     setWorkoutName(wt.name);
-    const exIndices = wt.exercises.map((ex) => exercises.indexOf(ex));
+    // Em vez de exercises.indexOf(ex), procuramos pelo nome
+    const exIndices = wt.exercises.map((ex) =>
+      exercises.findIndex((e) => e.name === ex.name)
+    );
     setSelectedExercises(exIndices);
     setWorkoutDialogOpen(true);
   }
@@ -1745,31 +2041,88 @@ function Treino() {
     setSelectedExercises([]);
   }
 
-  // Funções para Plano Semanal
-  function handleAssignWorkout(day: DayOfWeek, workoutName: string) {
-    setWeeklyPlan({...weeklyPlan, [day]: workoutName});
-    toast(`Treino "${workoutName}" atribuído a ${day}.`);
+  /* ------------------------------
+     Plano Semanal (render)
+  -------------------------------*/
+  function renderWeeklyPlan() {
+    return (
+      <Card className="p-4 space-y-4">
+        <h2 className="text-lg font-semibold">Plano Semanal</h2>
+        <p className="text-sm text-gray-600">
+          Defina o treino ou “Descanso” para cada dia da semana:
+        </p>
+
+        <div className="space-y-2 mt-2">
+          {(Object.keys(weeklyPlan) as DayOfWeek[]).map((day) => {
+            const assignedWorkout = weeklyPlan[day];
+            return (
+              <Card key={day} className="p-2 bg-white flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-sm">{day}:</span>
+                  <span className="text-sm">
+                    {assignedWorkout !== "Descanso"
+                      ? assignedWorkout
+                      : "Descanso"}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                  <Select
+                    onValueChange={(val) =>
+                      setWeeklyPlan({...weeklyPlan, [day]: val})
+                    }
+                    value={
+                      assignedWorkout !== "Descanso" ? assignedWorkout : ""
+                    }
+                  >
+                    <SelectTrigger className="w-full sm:w-[160px] text-sm">
+                      <SelectValue placeholder="Selecionar Treino" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workouts.map((wt, i) => (
+                        <SelectItem key={i} value={wt.name}>
+                          {wt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() =>
+                      setWeeklyPlan({...weeklyPlan, [day]: "Descanso"})
+                    }
+                  >
+                    Definir Descanso
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </Card>
+    );
   }
 
-  function handleResetDay(day: DayOfWeek) {
-    setWeeklyPlan({...weeklyPlan, [day]: "Descanso"});
-    toast(`${day} marcado como Descanso.`);
-  }
+  /* ------------------------------
+     Registo Diário
+  -------------------------------*/
+  const [showWeeklyTraining, setShowWeeklyTraining] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
 
-  // NOVO - Mostrar lista de dias da semana
   function renderWeeklyTraining() {
     return (
-      <Card className="p-4 space-y-4 shadow">
-        <h2 className="text-xl font-semibold">Dias da Semana (Registo)</h2>
+      <Card className="p-4 space-y-4 mt-4">
+        <h2 className="text-lg font-semibold">Dias da Semana (Registo)</h2>
         <p className="text-sm text-gray-700">
           Selecione o dia para ver o treino atribuído e registar séries.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
           {(Object.keys(weeklyPlan) as DayOfWeek[]).map((day) => (
             <Button
               key={day}
               onClick={() => setSelectedDay(day)}
               variant="outline"
+              className="text-xs"
             >
               {day}
             </Button>
@@ -1779,15 +2132,13 @@ function Treino() {
     );
   }
 
-  // Ao selecionar um dia, vemos o nome do treino
   function renderSelectedDayWorkout() {
     if (!selectedDay) return null;
-
     const assignedWorkout = weeklyPlan[selectedDay];
     if (assignedWorkout === "Descanso") {
       return (
-        <Card className="p-4 space-y-4 shadow">
-          <h3 className="text-xl font-semibold">{selectedDay} - Descanso</h3>
+        <Card className="p-4 space-y-4 mt-4">
+          <h3 className="text-lg font-semibold">{selectedDay} - Descanso</h3>
           <p className="text-sm text-gray-700">
             Não há treino atribuído neste dia.
           </p>
@@ -1797,8 +2148,8 @@ function Treino() {
     const workout = workouts.find((w) => w.name === assignedWorkout);
     if (!workout) {
       return (
-        <Card className="p-4 space-y-4 shadow">
-          <h3 className="text-xl font-semibold">
+        <Card className="p-4 space-y-4 mt-4">
+          <h3 className="text-lg font-semibold">
             {selectedDay} - Nenhum treino encontrado
           </h3>
           <p className="text-sm text-gray-700">
@@ -1808,11 +2159,9 @@ function Treino() {
         </Card>
       );
     }
-
-    // Listar exercícios e permitir registo
     return (
-      <Card className="p-4 space-y-4 shadow">
-        <h3 className="text-xl font-semibold">
+      <Card className="p-4 space-y-4 mt-4">
+        <h3 className="text-lg font-semibold">
           {selectedDay} - {workout.name}
         </h3>
         <ul className="space-y-2">
@@ -1833,45 +2182,63 @@ function Treino() {
             </li>
           ))}
         </ul>
-
-        {/* Mostrar histórico do dia */}
         <div className="mt-4">
-          <h4 className="font-semibold text-lg">Histórico do Dia</h4>
+          <h4 className="font-semibold text-base">Histórico do Dia</h4>
           {renderDayLogHistory(workout.name)}
         </div>
       </Card>
     );
   }
 
-  // Abrir diálogo para registar série(s) de um exercício
+  /* ------------------------------
+     Registo de Séries
+  -------------------------------*/
+  const [exerciseLogDialogOpen, setExerciseLogDialogOpen] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<Exercise | null>(null);
+
+  const [newSetReps, setNewSetReps] = useState(0);
+  const [newSetWeight, setNewSetWeight] = useState(0);
+  const [editSetIndex, setEditSetIndex] = useState<number | null>(null);
+
+  // Para expandir/minimizar os logs por data
+  const [openLogDates, setOpenLogDates] = useState<string[]>([]);
+
+  function toggleLogDate(date: string) {
+    if (openLogDates.includes(date)) {
+      setOpenLogDates(openLogDates.filter((d) => d !== date));
+    } else {
+      setOpenLogDates([...openLogDates, date]);
+    }
+  }
+
   function openExerciseLogDialog(ex: Exercise) {
     setCurrentExercise(ex);
     setExerciseLogDialogOpen(true);
-    // limpar possíveis states de sets
     setNewSetReps(0);
     setNewSetWeight(0);
     setEditSetIndex(null);
   }
 
-  // Guardar ou editar um set
+  const [trainingLogs, setTrainingLogs] = useLocalStorage<TrainingLogEntry[]>(
+    "trainingLogs",
+    []
+  );
+
   function handleSaveSet() {
     if (!currentExercise || !selectedDay) return;
-
     if (newSetReps <= 0 || newSetWeight < 0) {
       toast("Valores inválidos para repetições/peso.");
       return;
     }
+    const assignedWorkout = weeklyPlan[selectedDay];
+    if (!assignedWorkout || assignedWorkout === "Descanso") return;
 
-    // Encontrar se já existe um registo do dia + treino + exercício
-    const dayWorkoutName = weeklyPlan[selectedDay];
-    if (!dayWorkoutName || dayWorkoutName === "Descanso") return;
-
-    const todayDate = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
+    const todayDate = new Date().toISOString().slice(0, 10);
     const existingLogIndex = trainingLogs.findIndex(
       (log) =>
         log.date === todayDate &&
         log.dayOfWeek === selectedDay &&
-        log.workoutName === dayWorkoutName
+        log.workoutName === assignedWorkout
     );
 
     let updatedLogs = [...trainingLogs];
@@ -1883,12 +2250,11 @@ function Treino() {
       targetLog = {
         date: todayDate,
         dayOfWeek: selectedDay,
-        workoutName: dayWorkoutName,
+        workoutName: assignedWorkout,
         exerciseLogs: [],
       };
     }
 
-    // Ver se já existe exerciseLog
     const exerciseLogIndex = targetLog.exerciseLogs.findIndex(
       (el) => el.exerciseName === currentExercise.name
     );
@@ -1900,29 +2266,24 @@ function Treino() {
       exLog = {exerciseName: currentExercise.name, sets: []};
     }
 
-    // Inserir ou editar set
     if (editSetIndex !== null) {
-      // Editar set existente
       exLog.sets[editSetIndex] = {
         reps: newSetReps,
         weight: newSetWeight,
       };
     } else {
-      // Adicionar novo set
       exLog.sets.push({
         reps: newSetReps,
         weight: newSetWeight,
       });
     }
 
-    // Atualizar o exerciseLog no targetLog
     if (exerciseLogIndex >= 0) {
       targetLog.exerciseLogs[exerciseLogIndex] = exLog;
     } else {
       targetLog.exerciseLogs.push(exLog);
     }
 
-    // Salvar no array principal
     if (existingLogIndex >= 0) {
       updatedLogs[existingLogIndex] = targetLog;
     } else {
@@ -1930,34 +2291,30 @@ function Treino() {
     }
     setTrainingLogs(updatedLogs);
 
-    // feedback
     if (editSetIndex !== null) {
       toast("Set editado com sucesso!");
     } else {
       toast("Set adicionado ao registo de hoje!");
     }
 
-    // limpar
     setNewSetReps(0);
     setNewSetWeight(0);
     setEditSetIndex(null);
   }
 
-  // Mostrar registos já feitos neste exercício, hoje
   function renderSetsOfCurrentExercise() {
     if (!currentExercise || !selectedDay) return null;
+    const assignedWorkout = weeklyPlan[selectedDay];
+    if (!assignedWorkout || assignedWorkout === "Descanso") return null;
 
-    const dayWorkoutName = weeklyPlan[selectedDay];
     const todayDate = new Date().toISOString().slice(0, 10);
-
-    // encontrar no trainingLogs
     const logEntry = trainingLogs.find(
       (log) =>
         log.date === todayDate &&
         log.dayOfWeek === selectedDay &&
-        log.workoutName === dayWorkoutName
+        log.workoutName === assignedWorkout
     );
-    if (!logEntry) return null;
+    if (!logEntry) return <p>Nenhum set registado ainda.</p>;
 
     const exLog = logEntry.exerciseLogs.find(
       (el) => el.exerciseName === currentExercise.name
@@ -1969,7 +2326,7 @@ function Treino() {
     return (
       <ul className="space-y-1 mt-2">
         {exLog.sets.map((s, idx) => (
-          <li key={idx} className="flex justify-between items-center">
+          <li key={idx} className="flex justify-between items-center text-sm">
             <span>
               Set {idx + 1}: {s.reps} repetições | {s.weight} kg
             </span>
@@ -1992,14 +2349,8 @@ function Treino() {
     );
   }
 
-  // Renderizar histórico completo de todos os dias para este workout,
-  // mas apenas para o "dia selecionado" atual.
-  // O utilizador quer ver o que fez no treino anterior (mesmo dia anterior).
-  // Aqui exibimos apenas o dia atual. A ideia é que se deseje ver outro histórico,
-  // pode-se armazenar e exibir em outro local. Mas, para simplificar, mostraremos
-  // histórico de datas anteriores para este workout.
+  // Aqui aplicamos a visualização minimizada por data
   function renderDayLogHistory(currentWorkoutName: string) {
-    // Filtrar logs deste dia da semana + nome do workout
     const logsOfThisDayAndWorkout = trainingLogs.filter(
       (log) =>
         log.dayOfWeek === selectedDay && log.workoutName === currentWorkoutName
@@ -2010,182 +2361,51 @@ function Treino() {
       );
     }
 
-    return logsOfThisDayAndWorkout.map((log, idx) => (
-      <div key={idx} className="border p-2 rounded mt-2 bg-gray-100">
-        <h5 className="font-semibold mb-1 text-gray-700">Data: {log.date}</h5>
-        {log.exerciseLogs.length === 0 ? (
-          <p>Nenhum exercício registado.</p>
-        ) : (
-          <ul className="list-disc ml-4">
-            {log.exerciseLogs.map((exLog, exIdx) => (
-              <li key={exIdx} className="mb-2">
-                <strong>{exLog.exerciseName}</strong>
-                <ul className="list-none ml-0">
-                  {exLog.sets.map((s, sIdx) => (
-                    <li key={sIdx} className="text-sm">
-                      Set {sIdx + 1}: {s.reps} reps, {s.weight} kg
+    return logsOfThisDayAndWorkout.map((log, idx) => {
+      const isOpen = openLogDates.includes(log.date);
+      return (
+        <div key={idx} className="border p-2 rounded mt-2 bg-gray-100">
+          <Button
+            variant="outline"
+            className="w-full text-sm justify-between"
+            onClick={() => toggleLogDate(log.date)}
+          >
+            <span>Data: {log.date}</span>
+            <span>{isOpen ? "▲" : "▼"}</span>
+          </Button>
+          {isOpen && (
+            <div className="mt-2">
+              {log.exerciseLogs.length === 0 ? (
+                <p>Nenhum exercício registado.</p>
+              ) : (
+                <ul className="list-disc ml-4">
+                  {log.exerciseLogs.map((exLog, exIdx) => (
+                    <li key={exIdx} className="mb-2 text-sm">
+                      <strong>{exLog.exerciseName}</strong>
+                      <ul className="list-none ml-0">
+                        {exLog.sets.map((s, sIdx) => (
+                          <li key={sIdx}>
+                            Set {sIdx + 1}: {s.reps} reps, {s.weight} kg
+                          </li>
+                        ))}
+                      </ul>
                     </li>
                   ))}
                 </ul>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    ));
-  }
-
-  // Renderização do Plano Semanal
-  function renderWeeklyPlan() {
-    return (
-      <Card className="p-4 space-y-4 shadow">
-        <h2 className="text-xl font-semibold">Plano Semanal</h2>
-        <div className="space-y-2">
-          {Object.keys(weeklyPlan).map((day) => (
-            <div
-              key={day}
-              className="flex items-center justify-between p-2 bg-gray-100 rounded"
-            >
-              <span className="font-semibold">{day}:</span>
-              <span>
-                {weeklyPlan[day] !== "Descanso" ? (
-                  weeklyPlan[day]
-                ) : (
-                  <span className="text-red-500">Descanso</span>
-                )}
-              </span>
-              <div className="space-x-2">
-                <Select
-                  onValueChange={(val) =>
-                    handleAssignWorkout(day as DayOfWeek, val)
-                  }
-                  value={
-                    weeklyPlan[day] !== "Descanso" ? weeklyPlan[day] : undefined
-                  }
-                >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Selecionar Treino" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workouts.map((wt, i) => (
-                      <SelectItem key={i} value={wt.name}>
-                        {wt.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleResetDay(day as DayOfWeek)}
-                >
-                  Resetar
-                </Button>
-              </div>
+              )}
             </div>
-          ))}
+          )}
         </div>
-      </Card>
-    );
+      );
+    });
   }
 
   return (
-    <div>
-      {/* Lista de Exercícios */}
-      <Card className="p-4 space-y-4 shadow">
+    <div className="space-y-6">
+      {/* Registo Diário */}
+      <Card className="p-4 space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Exercícios</h2>
-          <Button onClick={() => setExerciseDialogOpen(true)}>
-            Adicionar Exercício
-          </Button>
-        </div>
-        {exercises.length === 0 ? (
-          <p>Nenhum exercício criado.</p>
-        ) : (
-          <ul className="space-y-2">
-            {exercises.map((ex, i) => (
-              <li
-                key={i}
-                className="border p-2 rounded bg-white text-sm flex items-center justify-between"
-              >
-                <div>
-                  <strong>{ex.name}</strong>
-                  <br />
-                  Séries: {ex.series} | Repetições: {ex.repetitions} | Pausa:{" "}
-                  {ex.pause}s
-                </div>
-                <div className="space-x-2">
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleEditExerciseClick(i)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleDeleteExercise(i)}
-                  >
-                    Apagar
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      {/* Lista de Treinos */}
-      <Card className="p-4 space-y-4 shadow">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Treinos</h2>
-          <Button onClick={() => setWorkoutDialogOpen(true)}>
-            Adicionar Treino
-          </Button>
-        </div>
-        {workouts.length === 0 ? (
-          <p>Nenhum treino criado.</p>
-        ) : (
-          <ul className="space-y-2">
-            {workouts.map((wt, i) => (
-              <li key={i} className="border p-2 rounded bg-white text-sm">
-                <div className="flex justify-between items-center">
-                  <strong>{wt.name}</strong>
-                  <div className="space-x-2">
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleEditWorkoutClick(i)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteWorkout(i)}
-                    >
-                      Apagar
-                    </Button>
-                  </div>
-                </div>
-                <ul className="ml-4 mt-2 list-disc">
-                  {wt.exercises.map((ex, j) => (
-                    <li key={j}>
-                      {ex.name} - {ex.series} séries de {ex.repetitions}{" "}
-                      repetições com {ex.pause}s de pausa
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      {/* Plano Semanal */}
-      {renderWeeklyPlan()}
-
-      {/* NOVO: Botão para ver “Dias da Semana” e registar treino */}
-      <Card className="p-4 space-y-4 shadow">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Registo Diário</h2>
+          <h2 className="text-lg font-semibold">Registo Diário</h2>
           <Button onClick={() => setShowWeeklyTraining(!showWeeklyTraining)}>
             {showWeeklyTraining
               ? "Fechar Dias da Semana"
@@ -2196,19 +2416,117 @@ function Treino() {
           <div>
             {renderWeeklyTraining()}
             {selectedDay && (
-              <div className="mt-4">
+              <div>
                 <Button
                   variant="secondary"
+                  className="mt-4"
                   onClick={() => setSelectedDay(null)}
                 >
                   Voltar
                 </Button>
-                <div className="mt-4">{renderSelectedDayWorkout()}</div>
+                {renderSelectedDayWorkout()}
               </div>
             )}
           </div>
         )}
       </Card>
+
+      {/* Lista de Exercícios (cartões) */}
+      <Card className="p-4 space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Exercícios</h2>
+          <Button onClick={() => setExerciseDialogOpen(true)}>
+            Adicionar Exercício
+          </Button>
+        </div>
+        {exercises.length === 0 ? (
+          <p>Nenhum exercício criado.</p>
+        ) : (
+          <div className="space-y-2">
+            {exercises.map((ex, i) => (
+              <Card
+                key={i}
+                className="p-2 bg-white text-sm flex items-center justify-between"
+              >
+                <div>
+                  <strong>{ex.name}</strong>
+                  <br />
+                  Séries: {ex.series} | Repetições: {ex.repetitions} | Pausa:{" "}
+                  {ex.pause}s
+                </div>
+                <div className="space-x-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleEditExerciseClick(i)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDeleteExercise(i)}
+                  >
+                    Apagar
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Lista de Treinos (cartões) */}
+      <Card className="p-4 space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Treinos</h2>
+          <Button onClick={() => setWorkoutDialogOpen(true)}>
+            Adicionar Treino
+          </Button>
+        </div>
+        {workouts.length === 0 ? (
+          <p>Nenhum treino criado.</p>
+        ) : (
+          <div className="space-y-2">
+            {workouts.map((wt, i) => (
+              <Card key={i} className="p-2 bg-white text-sm space-y-1">
+                <div className="flex justify-between items-center">
+                  <strong>{wt.name}</strong>
+                  <div className="space-x-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        handleEditWorkoutClick(i);
+                      }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteWorkout(i)}
+                    >
+                      Apagar
+                    </Button>
+                  </div>
+                </div>
+                <ul className="ml-4 list-disc text-xs text-gray-700 mt-1">
+                  {wt.exercises.map((ex, j) => (
+                    <li key={j}>
+                      {ex.name} – {ex.series}x{ex.repetitions}, pausa {ex.pause}
+                      s
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Plano Semanal */}
+      {renderWeeklyPlan()}
 
       {/* Dialog Exercício */}
       <Dialog open={exerciseDialogOpen} onOpenChange={setExerciseDialogOpen}>
@@ -2338,7 +2656,7 @@ function Treino() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog para registar séries de um exercício específico */}
+      {/* Dialog para Registo de Séries */}
       <Dialog
         open={exerciseLogDialogOpen}
         onOpenChange={setExerciseLogDialogOpen}
@@ -2355,6 +2673,11 @@ function Treino() {
                   type="number"
                   value={newSetReps}
                   onChange={(e) => setNewSetReps(Number(e.target.value))}
+                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                    if (Number(e.target.value) === 0) {
+                      e.target.value = "";
+                    }
+                  }}
                 />
               </div>
               <div>
@@ -2363,13 +2686,16 @@ function Treino() {
                   type="number"
                   value={newSetWeight}
                   onChange={(e) => setNewSetWeight(Number(e.target.value))}
+                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                    if (Number(e.target.value) === 0) {
+                      e.target.value = "";
+                    }
+                  }}
                 />
               </div>
-
               <Button onClick={handleSaveSet}>
                 {editSetIndex !== null ? "Salvar Set" : "Adicionar Set"}
               </Button>
-
               <hr className="my-2" />
               <h4 className="font-semibold">Sets de Hoje</h4>
               {renderSetsOfCurrentExercise()}
@@ -2394,19 +2720,28 @@ function Treino() {
   );
 }
 
-// ------------------- Seção Pesagens -------------------
-
+/* -------------------------------------
+   SEÇÃO PESAGENS (Listas melhoradas)
+--------------------------------------*/
 function Pesagens() {
   const [measurements, setMeasurements] = useLocalStorage<Measurement[]>(
     "measurements",
     []
   );
+
+  // Diálogo para adicionar/editar
   const [measurementDialogOpen, setMeasurementDialogOpen] =
     useLocalStorage<boolean>("measurementDialogOpen", false);
   const [editMeasurementIndex, setEditMeasurementIndex] = useLocalStorage<
     number | undefined
   >("editMeasurementIndex", undefined);
 
+  // Diálogo para visualizar detalhes
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailMeasurement, setDetailMeasurement] =
+    useState<Measurement | null>(null);
+
+  // Campos do form de pesagem
   const [date, setDate] = useLocalStorage<string>("date", "");
   const [time, setTime] = useLocalStorage<string>("time", "");
   const [weight, setWeight] = useLocalStorage<number>("weight", 0);
@@ -2436,6 +2771,28 @@ function Pesagens() {
     0
   );
 
+  /* ------------------------------
+     Cálculo da próxima pesagem
+  -------------------------------*/
+  function getNextMeasurementDate(): string | null {
+    if (measurements.length === 0) return null;
+    // Ordena pela data (mais recente primeiro)
+    const sorted = [...measurements].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+    const lastMeasurement = sorted[0];
+    const lastDate = new Date(lastMeasurement.date);
+    // Soma 15 dias à última pesagem
+    lastDate.setDate(lastDate.getDate() + 15);
+    const year = lastDate.getFullYear();
+    const month = (lastDate.getMonth() + 1).toString().padStart(2, "0");
+    const day = lastDate.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  /* ------------------------------
+     Ações: Adicionar, Editar, etc.
+  -------------------------------*/
   function handleAddMeasurementSubmit(e: FormEvent) {
     e.preventDefault();
     if (
@@ -2545,72 +2902,54 @@ function Pesagens() {
     setMetabolicAge(0);
   }
 
+  // Ao clicar numa pesagem, abrimos o diálogo de detalhes
+  function openMeasurementDetail(m: Measurement) {
+    setDetailMeasurement(m);
+    setDetailDialogOpen(true);
+  }
+
+  /* ------------------------------
+     Renderização final de Pesagens
+  -------------------------------*/
   return (
-    <div>
-      {/* Lista de Pesagens */}
-      <Card className="p-4 space-y-4 shadow">
+    <div className="space-y-6">
+      <Card className="p-4 space-y-4">
+        {/* Mostra a data da próxima pesagem (se houver ao menos 1 pesagem) */}
+        {measurements.length > 0 && (
+          <p className="text-sm font-semibold text-center">
+            Próxima pesagem: {getNextMeasurementDate() || "--"}
+          </p>
+        )}
+
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Pesagens</h2>
+          <h2 className="text-lg font-semibold">Pesagens</h2>
           <Button onClick={() => setMeasurementDialogOpen(true)}>
             Adicionar Pesagem
           </Button>
         </div>
+
         {measurements.length === 0 ? (
           <p>Nenhuma pesagem registrada.</p>
         ) : (
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr>
-                <th className="py-2">Data</th>
-                <th className="py-2">Hora</th>
-                <th className="py-2">Peso (kg)</th>
-                <th className="py-2">Massa Muscular (%)</th>
-                <th className="py-2">Massa Muscular (kg)</th>
-                <th className="py-2">Massa Gorda (%)</th>
-                <th className="py-2">Água (%)</th>
-                <th className="py-2">Altura (cm)</th>
-                <th className="py-2">Gordura Visceral</th>
-                <th className="py-2">Idade Metabólica</th>
-                <th className="py-2">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {measurements.map((m, i) => (
-                <tr key={i} className="text-center border-t">
-                  <td className="py-2">{m.date}</td>
-                  <td className="py-2">{m.time}</td>
-                  <td className="py-2">{m.weight}</td>
-                  <td className="py-2">{m.muscleMassPercent}</td>
-                  <td className="py-2">{m.muscleMassKg}</td>
-                  <td className="py-2">{m.fatMassPercent}</td>
-                  <td className="py-2">{m.waterPercent}</td>
-                  <td className="py-2">{m.height}</td>
-                  <td className="py-2">{m.visceralFat}</td>
-                  <td className="py-2">{m.metabolicAge}</td>
-                  <td className="py-2 space-x-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleEditMeasurementClick(i)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDeleteMeasurement(i)}
-                    >
-                      Apagar
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="flex flex-col gap-2">
+            {measurements.map((m, i) => (
+              <Button
+                key={i}
+                variant="outline"
+                className="justify-between text-sm"
+                onClick={() => openMeasurementDetail(m)}
+              >
+                <span>Data: {m.date}</span>
+                <span className="ml-2 text-gray-600 text-xs">
+                  Hora: {m.time}
+                </span>
+              </Button>
+            ))}
+          </div>
         )}
       </Card>
 
-      {/* Dialog Pesagem */}
+      {/* Dialog Adicionar/Editar Pesagem */}
       <Dialog
         open={measurementDialogOpen}
         onOpenChange={setMeasurementDialogOpen}
@@ -2648,48 +2987,88 @@ function Pesagens() {
               type="number"
               value={weight}
               onChange={(e) => setWeight(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Massa Muscular (%):</Label>
             <Input
               type="number"
               value={muscleMassPercent}
               onChange={(e) => setMuscleMassPercent(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Massa Muscular (kg):</Label>
             <Input
               type="number"
               value={muscleMassKg}
               onChange={(e) => setMuscleMassKg(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Massa Gorda (%):</Label>
             <Input
               type="number"
               value={fatMassPercent}
               onChange={(e) => setFatMassPercent(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Água (%):</Label>
             <Input
               type="number"
               value={waterPercent}
               onChange={(e) => setWaterPercent(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Altura (cm):</Label>
             <Input
               type="number"
               value={height}
               onChange={(e) => setHeight(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Gordura Visceral:</Label>
             <Input
               type="number"
               value={visceralFat}
               onChange={(e) => setVisceralFat(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <Label>Idade Metabólica:</Label>
             <Input
               type="number"
               value={metabolicAge}
               onChange={(e) => setMetabolicAge(Number(e.target.value))}
+              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                if (Number(e.target.value) === 0) {
+                  e.target.value = "";
+                }
+              }}
             />
             <DialogFooter>
               <Button
@@ -2706,6 +3085,91 @@ function Pesagens() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Detalhes da Pesagem */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detalhes da Pesagem</DialogTitle>
+          </DialogHeader>
+          {detailMeasurement && (
+            <div className="text-sm space-y-2">
+              <p>
+                <strong>Data:</strong> {detailMeasurement.date}
+              </p>
+              <p>
+                <strong>Hora:</strong> {detailMeasurement.time}
+              </p>
+              <p>
+                <strong>Peso:</strong> {detailMeasurement.weight} kg
+              </p>
+              <p>
+                <strong>Massa Muscular (%):</strong>{" "}
+                {detailMeasurement.muscleMassPercent}
+              </p>
+              <p>
+                <strong>Massa Muscular (kg):</strong>{" "}
+                {detailMeasurement.muscleMassKg}
+              </p>
+              <p>
+                <strong>Massa Gorda (%):</strong>{" "}
+                {detailMeasurement.fatMassPercent}
+              </p>
+              <p>
+                <strong>Água (%):</strong> {detailMeasurement.waterPercent}
+              </p>
+              <p>
+                <strong>Altura (cm):</strong> {detailMeasurement.height}
+              </p>
+              <p>
+                <strong>Gordura Visceral:</strong>{" "}
+                {detailMeasurement.visceralFat}
+              </p>
+              <p>
+                <strong>Idade Metabólica:</strong>{" "}
+                {detailMeasurement.metabolicAge}
+              </p>
+
+              <div className="flex justify-end space-x-2 mt-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    const idx = measurements.indexOf(detailMeasurement);
+                    if (idx >= 0) {
+                      handleEditMeasurementClick(idx);
+                      setDetailDialogOpen(false);
+                    }
+                  }}
+                >
+                  Editar
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    const idx = measurements.indexOf(detailMeasurement);
+                    if (idx >= 0) {
+                      handleDeleteMeasurement(idx);
+                      setDetailDialogOpen(false);
+                    }
+                  }}
+                >
+                  Apagar
+                </Button>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setDetailDialogOpen(false)}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
