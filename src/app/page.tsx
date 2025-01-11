@@ -27,19 +27,18 @@ export default function Page() {
 
       // Verifica se o elemento clicado é um input ou textarea
       const isInputField =
-        target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
 
-      // Previne o foco automático se não for um input ou textarea
+      // Apenas previne o comportamento padrão se NÃO for um campo de entrada
       if (!isInputField) {
-        event.preventDefault();
-        target.blur();
+        target.blur(); // Remove o foco se estiver em outro elemento
       }
     };
 
     // Adiciona o evento ao document
-    document.addEventListener("touchstart", preventKeyboardOpen, {
-      passive: false,
-    });
+    document.addEventListener("touchstart", preventKeyboardOpen);
 
     // Remove o evento ao desmontar o componente
     return () => {
