@@ -14,20 +14,39 @@ import Pesagens from "@/components/Pesagens";
 import {Button} from "@/components/ui/button";
 
 export default function Page() {
-  // Hook 1: controla se já montou no cliente (para evitar problemas de SSR)
   const [hasMounted, setHasMounted] = useState(false);
-
-  // Hook 2: marca como montado assim que estiver no cliente
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  // Hook 3: estado para definir a tab/visor atual
   const [currentView, setCurrentView] = useState<
     "Principal" | "Dieta" | "Treino" | "Pesagens"
   >("Principal");
 
-  // Se quiseres mostrar um “loading” ou layout parcial antes de `hasMounted`:
+  useEffect(() => {
+    setHasMounted(true);
+
+    const preventKeyboardOpen = (event: TouchEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Verifica se o elemento clicado é um input ou textarea
+      const isInputField =
+        target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+
+      // Previne o foco automático se não for um input ou textarea
+      if (!isInputField) {
+        event.preventDefault();
+        target.blur();
+      }
+    };
+
+    // Adiciona o evento ao document
+    document.addEventListener("touchstart", preventKeyboardOpen, {
+      passive: false,
+    });
+
+    // Remove o evento ao desmontar o componente
+    return () => {
+      document.removeEventListener("touchstart", preventKeyboardOpen);
+    };
+  }, []);
+
   if (!hasMounted) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -36,8 +55,6 @@ export default function Page() {
     );
   }
 
-  // Se preferires, podes simplesmente renderizar tudo sem este if,
-  // mas com este approach não alteramos a ordem de Hooks entre renders.
   return (
     <div className="font-sans bg-gray-50 h-screen flex flex-col">
       <ToastContainer
@@ -48,18 +65,12 @@ export default function Page() {
         pauseOnHover={false}
         draggable={false}
       />
-
-      {/* Top Bar simples */}
-
-      {/* Conteúdo principal (scroll interno), deixando espaço em baixo para Bottom Nav */}
       <main className="flex-1 overflow-y-auto p-3 pb-16">
         {currentView === "Principal" && <Principal />}
         {currentView === "Dieta" && <Dieta />}
         {currentView === "Treino" && <Treino />}
         {currentView === "Pesagens" && <Pesagens />}
       </main>
-
-      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center p-2">
         <Button
           variant={currentView === "Principal" ? "default" : "outline"}

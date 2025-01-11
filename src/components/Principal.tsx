@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState} from "react";
+import React, {FormEvent, useState} from "react";
 import useLocalStorage from "use-local-storage";
 import {toast} from "react-toastify";
 
@@ -9,6 +9,20 @@ import {Card} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* -----------------------------------------
    Tipos/Tabelas para Treino e Dieta
@@ -29,12 +43,12 @@ interface Exercise {
   pause: number; // em segundos
 }
 
-// Se o treino estiver no formato antigo, ele terá a chave "exercises" (array de Exercise)
+// Se o treino estiver no formato antigo, terá a chave "exercises" (array de Exercise)
 // Se estiver no novo formato, terá "exerciseIds" (array de números)
 interface Workout {
   name: string;
-  exercises?: Exercise[]; // antigo
-  exerciseIds?: number[]; // novo
+  exercises?: Exercise[];
+  exerciseIds?: number[];
 }
 
 interface WeeklyPlan {
@@ -116,7 +130,11 @@ export default function Principal() {
   const [newSetWeight, setNewSetWeight] = useState(0);
   const [editSetIndex, setEditSetIndex] = useState<number | null>(null);
 
+  /* ----------------------
+     FUNÇÃO: Adicionar/Editar Set
+  -----------------------*/
   function handleSaveSet() {
+    // Só tenta salvar se tanto o dia quanto o exercício estiverem selecionados
     if (!selectedDay || !selectedExercise) return;
     if (newSetReps <= 0 || newSetWeight < 0) {
       toast("Valores inválidos para repetições/peso.");
@@ -130,7 +148,6 @@ export default function Principal() {
     }
 
     const todayDate = new Date().toISOString().slice(0, 10);
-
     const existingLogIndex = trainingLogs.findIndex(
       (log) =>
         log.date === todayDate &&
@@ -152,7 +169,7 @@ export default function Principal() {
       };
     }
 
-    // localiza ou cria o exerciseLog
+    // Procura pelo log do exercício selecionado ou cria um novo
     const exerciseLogIndex = targetLog.exerciseLogs.findIndex(
       (el) => el.exerciseName === selectedExercise.name
     );
@@ -182,24 +199,30 @@ export default function Principal() {
     }
     setTrainingLogs(updatedLogs);
 
-    if (editSetIndex !== null) {
-      toast("Set editado com sucesso!");
-    } else {
-      toast("Set adicionado com sucesso!");
-    }
+    toast(
+      editSetIndex !== null
+        ? "Set editado com sucesso!"
+        : "Set adicionado ao registo de hoje!"
+    );
 
-    // Reset
+    // Reseta os inputs
     setNewSetReps(0);
     setNewSetWeight(0);
     setEditSetIndex(null);
   }
 
+  /* ----------------------
+     FUNÇÃO: Renderizar Sets do Exercício Selecionado
+  -----------------------*/
   function renderSetsOfSelectedExercise() {
     if (!selectedDay || !selectedExercise) {
       return (
-        <p className="text-sm text-gray-500">Selecione exercício acima.</p>
+        <p className="text-sm text-gray-500">
+          Selecione um exercício para registrar os sets.
+        </p>
       );
     }
+
     const assignedWorkout = weeklyPlan[selectedDay];
     if (!assignedWorkout || assignedWorkout === "Descanso") {
       return <p className="text-sm">Dia de descanso.</p>;
@@ -247,7 +270,9 @@ export default function Principal() {
     );
   }
 
-  // SCROLL HORIZONTAL para dias (mobile-friendly)
+  /* ----------------------
+     FUNÇÃO: Renderizar Dias da Semana
+  -----------------------*/
   function renderWeeklyDays() {
     const days = Object.keys(weeklyPlan) as DayOfWeek[];
     return (
@@ -257,7 +282,6 @@ export default function Principal() {
             const isSelected = day === selectedDay;
             const assignedWorkout = weeklyPlan[day];
             const isRest = assignedWorkout === "Descanso";
-
             return (
               <Button
                 key={day}
@@ -279,8 +303,9 @@ export default function Principal() {
     );
   }
 
-  // Corrigida a função renderExercisesOfSelectedDay
-  // Detectamos se o treino está no formato antigo (w.exercises) ou novo (w.exerciseIds)
+  /* ----------------------
+     FUNÇÃO: Renderizar Exercícios do Dia Selecionado
+  -----------------------*/
   function renderExercisesOfSelectedDay() {
     if (!selectedDay) {
       return <p className="text-sm">Selecione um dia acima.</p>;
@@ -300,13 +325,11 @@ export default function Principal() {
       );
     }
 
-    // Aqui detectamos qual a estrutura do treino:
+    // Detecta a estrutura do treino: antigo (exercises) ou novo (exerciseIds)
     let workoutExercises: Exercise[] = [];
     if (Array.isArray(wt.exercises)) {
-      // Formato antigo: já possui o array de exercícios.
       workoutExercises = wt.exercises;
     } else if (Array.isArray(wt.exerciseIds)) {
-      // Formato novo: mapeia os índices para os exercícios armazenados.
       workoutExercises = wt.exerciseIds
         .map((id) => exercises[id])
         .filter(Boolean);
@@ -429,10 +452,9 @@ export default function Principal() {
                             const calVal = product.cal * factor;
                             return (
                               <p key={idx} className="my-1">
-                                • {product.name} – {it.grams}g | HC:
-                                {cVal.toFixed(1)} | P:
-                                {pVal.toFixed(1)} | G:{fVal.toFixed(1)} | Cal:
-                                {calVal.toFixed(1)}
+                                • {product.name} – {it.grams}g | HC:{" "}
+                                {cVal.toFixed(1)} | P: {pVal.toFixed(1)} | G:{" "}
+                                {fVal.toFixed(1)} | Cal: {calVal.toFixed(1)}
                               </p>
                             );
                           })}
@@ -441,8 +463,8 @@ export default function Principal() {
                               const sp = sumPlate(pl);
                               return (
                                 <p>
-                                  Total: {sp.cal.toFixed(1)}kcal | HC:
-                                  {sp.c.toFixed(1)} | P:{sp.p.toFixed(1)} | G:
+                                  Total: {sp.cal.toFixed(1)}kcal | HC:{" "}
+                                  {sp.c.toFixed(1)} | P: {sp.p.toFixed(1)} | G:{" "}
                                   {sp.f.toFixed(1)}
                                 </p>
                               );
@@ -466,7 +488,7 @@ export default function Principal() {
   -----------------------*/
   return (
     <div className="min-h-screen flex flex-col">
-      {/* TOPO MOBILE-FIRST: gradiente suave */}
+      {/* TOPO */}
       <header className="bg-gradient-to-r from-green-500 to-teal-400 text-white p-3 sm:p-4 shadow">
         <h1 className="text-lg sm:text-xl font-bold text-center flex items-center justify-center gap-2">
           <span>🌱</span>
@@ -491,13 +513,13 @@ export default function Principal() {
           <h2 className="text-base sm:text-lg font-semibold">
             Registo Diário de Treino
           </h2>
-          {/* Dias */}
+          {/* Renderiza os dias */}
           {renderWeeklyDays()}
-          {/* Exercícios do dia */}
+          {/* Renderiza os exercícios do dia selecionado */}
           {renderExercisesOfSelectedDay()}
 
-          {/* Formulário sets do exercício */}
-          {selectedExercise && selectedDay && (
+          {/* Renderiza os inputs para registo de sets somente se houver dia e exercício selecionados */}
+          {selectedDay && selectedExercise && (
             <div className="mt-3 border p-2 rounded bg-gray-50 text-sm space-y-2">
               <p className="font-semibold">
                 Dia: {selectedDay} | Exercício: {selectedExercise.name}
@@ -509,6 +531,7 @@ export default function Principal() {
                   value={newSetReps}
                   onChange={(e) => setNewSetReps(Number(e.target.value))}
                   onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                    // Evita que o input preencha automaticamente com "0"
                     if (Number(e.target.value) === 0) e.target.value = "";
                   }}
                 />
