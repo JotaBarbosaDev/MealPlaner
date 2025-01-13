@@ -217,7 +217,7 @@ export default function Principal() {
   function renderSetsOfSelectedExercise() {
     if (!selectedDay || !selectedExercise) {
       return (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 italic">
           Selecione um exercício para registrar os sets.
         </p>
       );
@@ -225,7 +225,7 @@ export default function Principal() {
 
     const assignedWorkout = weeklyPlan[selectedDay];
     if (!assignedWorkout || assignedWorkout === "Descanso") {
-      return <p className="text-sm">Dia de descanso.</p>;
+      return <p className="text-sm italic">Dia de descanso.</p>;
     }
 
     const todayDate = new Date().toISOString().slice(0, 10);
@@ -235,38 +235,63 @@ export default function Principal() {
         log.dayOfWeek === selectedDay &&
         log.workoutName === assignedWorkout
     );
-    if (!logEntry) {
-      return <p className="text-sm">Nenhum set registado ainda.</p>;
-    }
 
-    const exLog = logEntry.exerciseLogs.find(
+    const exLog = logEntry?.exerciseLogs.find(
       (el) => el.exerciseName === selectedExercise.name
     );
+
     if (!exLog || exLog.sets.length === 0) {
-      return <p className="text-sm">Nenhum set registado ainda.</p>;
+      return (
+        <div className="bg-gray-50 p-4 rounded-lg text-center">
+          <p className="text-sm text-gray-500">
+            Nenhum set registado ainda para {selectedExercise.name}.
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Use o formulário acima para adicionar sets.
+          </p>
+        </div>
+      );
     }
 
     return (
-      <ul className="space-y-1 mt-2">
+      <div className="space-y-2">
         {exLog.sets.map((s, idx) => (
-          <li key={idx} className="flex justify-between items-center text-sm">
-            <span>
-              Set {idx + 1}: {s.reps} rep / {s.weight} kg
-            </span>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setEditSetIndex(idx);
-                setNewSetReps(s.reps);
-                setNewSetWeight(s.weight);
-              }}
-            >
-              Editar
-            </Button>
-          </li>
+          <div
+            key={idx}
+            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+          >
+            <div className="p-3 flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
+                  {idx + 1}
+                </span>
+                <div className="flex gap-4 text-sm">
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-600">🔄</span>
+                    {s.reps} reps
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-green-600">⚖️</span>
+                    {s.weight} kg
+                  </span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="hover:bg-green-50 text-green-600"
+                onClick={() => {
+                  setEditSetIndex(idx);
+                  setNewSetReps(s.reps);
+                  setNewSetWeight(s.weight);
+                }}
+              >
+                ✏️
+              </Button>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
     );
   }
 
@@ -308,24 +333,32 @@ export default function Principal() {
   -----------------------*/
   function renderExercisesOfSelectedDay() {
     if (!selectedDay) {
-      return <p className="text-sm">Selecione um dia acima.</p>;
+      return (
+        <p className="text-sm text-gray-500 italic">
+          Selecione um dia acima para ver o treino.
+        </p>
+      );
     }
 
     const assignedWorkout = weeklyPlan[selectedDay];
     if (!assignedWorkout || assignedWorkout === "Descanso") {
-      return <p className="text-sm text-gray-700">Dia de descanso.</p>;
+      return (
+        <div className="bg-gray-50 p-4 rounded-xl text-center">
+          <span className="text-2xl mb-2 block">😴</span>
+          <p className="text-sm text-gray-600">Dia de descanso.</p>
+        </div>
+      );
     }
 
     const wt = workouts.find((w) => w.name === assignedWorkout);
     if (!wt) {
       return (
-        <p className="text-sm text-gray-700">
-          Treino “{assignedWorkout}” não encontrado.
+        <p className="text-sm text-gray-600 italic">
+          Treino "{assignedWorkout}" não encontrado.
         </p>
       );
     }
 
-    // Detecta a estrutura do treino: antigo (exercises) ou novo (exerciseIds)
     let workoutExercises: Exercise[] = [];
     if (Array.isArray(wt.exercises)) {
       workoutExercises = wt.exercises;
@@ -336,35 +369,74 @@ export default function Principal() {
     }
 
     if (workoutExercises.length === 0) {
-      return <p className="text-sm">Nenhum exercício neste treino.</p>;
+      return (
+        <p className="text-sm text-gray-500 italic">
+          Nenhum exercício neste treino.
+        </p>
+      );
     }
 
     return (
-      <ul className="mt-2 space-y-1">
-        {workoutExercises.map((ex, i) => {
-          const isSelected =
-            selectedExercise && selectedExercise.name === ex.name;
-          return (
-            <li key={i} className="text-sm flex items-center gap-2">
-              <Button
-                size="sm"
-                variant={isSelected ? "default" : "outline"}
-                onClick={() => {
-                  setSelectedExercise(ex);
-                  setNewSetReps(0);
-                  setNewSetWeight(0);
-                  setEditSetIndex(null);
-                }}
+      <div className="space-y-3">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-xl">
+          <h3 className="text-green-700 font-medium flex items-center gap-2">
+            <span className="text-lg">🏋️</span>
+            Treino: {assignedWorkout}
+          </h3>
+        </div>
+
+        <div className="grid gap-2">
+          {workoutExercises.map((ex, i) => {
+            const isSelected =
+              selectedExercise && selectedExercise.name === ex.name;
+            return (
+              <div
+                key={i}
+                className={`bg-white border rounded-xl transition-all duration-300 overflow-hidden
+                  ${
+                    isSelected
+                      ? "border-green-200 shadow-md"
+                      : "border-gray-200 hover:border-green-200 hover:shadow-sm"
+                  }`}
               >
-                {ex.name}
-              </Button>
-              <span className="text-xs text-gray-500">
-                {ex.series}x{ex.repetitions}, pausa {ex.pause}s
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                <Button
+                  className={`w-full justify-between p-4 h-auto
+                    ${isSelected ? "bg-green-50" : "hover:bg-gray-50"}`}
+                  variant="ghost"
+                  onClick={() => {
+                    setSelectedExercise(ex);
+                    setNewSetReps(0);
+                    setNewSetWeight(0);
+                    setEditSetIndex(null);
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-green-600 text-lg">
+                      {isSelected ? "🎯" : "💪"}
+                    </span>
+                    <div className="text-left">
+                      <p className="font-medium text-gray-800">{ex.name}</p>
+                      <div className="flex gap-3 text-xs text-gray-500 mt-1">
+                        <span className="flex items-center gap-1">
+                          <span className="text-green-600">🔄</span>
+                          {ex.series}x{ex.repetitions}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="text-green-600">⏱️</span>
+                          {ex.pause}s pausa
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-green-600">
+                    {isSelected ? "▼" : "▶"}
+                  </span>
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     );
   }
 
@@ -409,39 +481,54 @@ export default function Principal() {
   function renderDietPlan() {
     if (!meals || meals.length === 0) {
       return (
-        <p className="text-sm text-gray-700">Nenhuma refeição definida.</p>
+        <p className="text-sm text-gray-600 italic">
+          Nenhuma refeição definida.
+        </p>
       );
     }
     return meals.map((meal, i) => (
-      <Card
+      <div
         key={i}
-        className="p-2 bg-white mb-2 transition-colors hover:bg-gray-50"
+        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300"
       >
-        <h3 className="text-base font-semibold text-green-700 mb-1">
-          {meal.name}
-        </h3>
+        <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50">
+          <h3 className="text-base font-semibold text-green-700 flex items-center gap-2">
+            <span className="text-lg">🍽️</span>
+            {meal.name}
+          </h3>
+        </div>
+
         {meal.plates.length === 0 ? (
-          <p className="text-xs text-gray-500">Nenhum prato nesta refeição.</p>
+          <p className="text-sm text-gray-500 italic p-4">
+            Nenhum prato nesta refeição.
+          </p>
         ) : (
-          <ul className="ml-4 mt-1 space-y-2">
+          <div className="divide-y divide-gray-100">
             {meal.plates.map((pl, j) => {
               const isOpen = openPlates.includes(pl.name);
               return (
-                <li key={j} className="border-b pb-2 last:border-none">
+                <div key={j} className="p-3">
                   <Button
-                    size="sm"
-                    variant="outline"
-                    className="transition-colors hover:bg-gray-100"
+                    variant="ghost"
+                    className="w-full justify-between hover:bg-green-50 transition-colors"
                     onClick={() => togglePlate(pl.name)}
                   >
-                    {isOpen ? "▼" : "►"} {pl.name}
+                    <span className="flex items-center gap-2">
+                      <span className="text-green-600">
+                        {isOpen ? "🔽" : "▶️"}
+                      </span>
+                      {pl.name}
+                    </span>
                   </Button>
+
                   {isOpen && (
-                    <div className="mt-2 ml-4 border-l pl-2 border-gray-300 text-xs text-gray-700">
+                    <div className="mt-2 space-y-2">
                       {pl.items.length === 0 ? (
-                        <p>Nenhum produto neste prato.</p>
+                        <p className="text-sm text-gray-500 italic ml-6">
+                          Nenhum produto neste prato.
+                        </p>
                       ) : (
-                        <>
+                        <div className="ml-6 space-y-2">
                           {pl.items.map((it, idx) => {
                             const product = products[it.productIndex];
                             if (!product) return null;
@@ -450,36 +537,56 @@ export default function Principal() {
                             const fVal = product.f * factor;
                             const cVal = product.c * factor;
                             const calVal = product.cal * factor;
+
                             return (
-                              <p key={idx} className="my-1">
-                                • {product.name} – {it.grams}g | HC:{" "}
-                                {cVal.toFixed(1)} | P: {pVal.toFixed(1)} | G:{" "}
-                                {fVal.toFixed(1)} | Cal: {calVal.toFixed(1)}
-                              </p>
+                              <div
+                                key={idx}
+                                className="bg-gray-50 p-2 rounded-lg text-sm"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <span className="font-medium text-gray-700">
+                                    {product.name}
+                                  </span>
+                                  <span className="text-gray-500">
+                                    {it.grams}g
+                                  </span>
+                                </div>
+                                <div className="mt-1 text-xs text-gray-600 flex gap-3">
+                                  <span>HC: {cVal.toFixed(1)}g</span>
+                                  <span>P: {pVal.toFixed(1)}g</span>
+                                  <span>G: {fVal.toFixed(1)}g</span>
+                                  <span>Cal: {calVal.toFixed(1)}</span>
+                                </div>
+                              </div>
                             );
                           })}
-                          <div className="mt-1 font-semibold">
+
+                          <div className="bg-green-50 p-2 rounded-lg mt-3">
+                            <p className="text-sm font-medium text-green-700">
+                              Total do Prato
+                            </p>
                             {(() => {
                               const sp = sumPlate(pl);
                               return (
-                                <p>
-                                  Total: {sp.cal.toFixed(1)}kcal | HC:{" "}
-                                  {sp.c.toFixed(1)} | P: {sp.p.toFixed(1)} | G:{" "}
-                                  {sp.f.toFixed(1)}
-                                </p>
+                                <div className="text-xs text-gray-600 flex gap-3 mt-1">
+                                  <span>Cal: {sp.cal.toFixed(1)}kcal</span>
+                                  <span>HC: {sp.c.toFixed(1)}g</span>
+                                  <span>P: {sp.p.toFixed(1)}g</span>
+                                  <span>G: {sp.f.toFixed(1)}g</span>
+                                </div>
                               );
                             })()}
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   )}
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
-      </Card>
+      </div>
     ));
   }
 
@@ -489,69 +596,111 @@ export default function Principal() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* TOPO */}
-      <header className="bg-gradient-to-r from-green-500 to-teal-400 text-white p-3 sm:p-4 shadow">
-        <h1 className="text-lg sm:text-xl font-bold text-center flex items-center justify-center gap-2">
-          <span>🌱</span>
+      <header className="bg-gradient-to-r from-green-500 via-green-400 to-emerald-400 text-white p-4 sm:p-6 shadow-lg rounded-xl mb-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-center flex items-center justify-center gap-3">
+          <span className="text-2xl sm:text-3xl">🌱</span>
           Plano Nutricional + Treino
         </h1>
       </header>
 
       {/* CONTEÚDO */}
-      <main className="flex-1 p-2 sm:p-4 space-y-4 sm:space-y-6">
+      <main className="flex-1 space-y-6">
         {/* Cartão de boas-vindas */}
-        <Card className="p-3 sm:p-4 bg-white shadow hover:shadow-md transition-shadow">
-          <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-            Olá! <span className="text-xl">👋</span>
+        <Card className="p-4 sm:p-6 bg-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
+          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-3">
+            Olá! <span className="text-2xl">👋</span>
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-gray-600 mt-2">
             Aqui tens uma visão geral do teu treino e da tua dieta.
           </p>
         </Card>
 
         {/* TREINO */}
-        <Card className="p-3 sm:p-4 bg-white space-y-3 shadow hover:shadow-md transition-shadow">
-          <h2 className="text-base sm:text-lg font-semibold">
-            Registo Diário de Treino
+        <Card className="p-4 sm:p-6 bg-white space-y-4 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
+          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+            <span className="text-green-600">💪</span> Registo Diário de Treino
           </h2>
-          {/* Renderiza os dias */}
-          {renderWeeklyDays()}
+
+          {/* Renderiza os dias com design atualizado */}
+          <div className="w-full overflow-x-auto py-2">
+            <div className="flex space-x-2 whitespace-nowrap">
+              {Object.keys(weeklyPlan).map((day) => {
+                const isSelected = day === selectedDay;
+                const assignedWorkout = weeklyPlan[day];
+                const isRest = assignedWorkout === "Descanso";
+                return (
+                  <Button
+                    key={day}
+                    size="sm"
+                    variant={isSelected ? "default" : "outline"}
+                    className={`min-w-[110px] sm:min-w-[140px] transition-all duration-300 ${
+                      isSelected
+                        ? "bg-green-600 hover:bg-green-700 text-white transform scale-105"
+                        : isRest
+                        ? "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                        : "bg-white text-green-700 border-green-600 hover:bg-green-50"
+                    }`}
+                    onClick={() => setSelectedDay(day as DayOfWeek)}
+                  >
+                    {isRest ? `😴 ${day}` : `🏋️ ${day}`}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Renderiza os exercícios do dia selecionado */}
           {renderExercisesOfSelectedDay()}
 
           {/* Renderiza os inputs para registo de sets somente se houver dia e exercício selecionados */}
           {selectedDay && selectedExercise && (
-            <div className="mt-3 border p-2 rounded bg-gray-50 text-sm space-y-2">
-              <p className="font-semibold">
-                Dia: {selectedDay} | Exercício: {selectedExercise.name}
-              </p>
-              <div>
-                <Label className="text-xs">Repetições:</Label>
-                <Input
-                  type="number"
-                  value={newSetReps}
-                  onChange={(e) => setNewSetReps(Number(e.target.value))}
-                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                    // Evita que o input preencha automaticamente com "0"
-                    if (Number(e.target.value) === 0) e.target.value = "";
-                  }}
-                />
+            <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-4">
+              <div className="flex items-center gap-2 text-green-700 font-medium">
+                <span className="text-lg">📝</span>
+                Registrar Set
               </div>
-              <div>
-                <Label className="text-xs">Peso (kg):</Label>
-                <Input
-                  type="number"
-                  value={newSetWeight}
-                  onChange={(e) => setNewSetWeight(Number(e.target.value))}
-                  onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                    if (Number(e.target.value) === 0) e.target.value = "";
-                  }}
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm text-gray-600">Repetições</Label>
+                  <Input
+                    type="number"
+                    value={newSetReps}
+                    onChange={(e) => setNewSetReps(Number(e.target.value))}
+                    onFocus={(e) => {
+                      if (Number(e.target.value) === 0) e.target.value = "";
+                    }}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-600">Peso (kg)</Label>
+                  <Input
+                    type="number"
+                    value={newSetWeight}
+                    onChange={(e) => setNewSetWeight(Number(e.target.value))}
+                    onFocus={(e) => {
+                      if (Number(e.target.value) === 0) e.target.value = "";
+                    }}
+                    className="mt-1"
+                  />
+                </div>
               </div>
-              <Button size="sm" onClick={handleSaveSet}>
-                {editSetIndex !== null ? "Salvar Alteração" : "Adicionar Set"}
+
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleSaveSet}
+              >
+                {editSetIndex !== null
+                  ? "💾 Salvar Alteração"
+                  : "➕ Adicionar Set"}
               </Button>
-              <div className="mt-2">
-                <h4 className="text-sm font-semibold">Sets de Hoje</h4>
+
+              <div className="mt-4">
+                <h4 className="font-medium text-green-700 flex items-center gap-2 mb-3">
+                  <span className="text-lg">📊</span>
+                  Sets de Hoje
+                </h4>
                 {renderSetsOfSelectedExercise()}
               </div>
             </div>
@@ -559,11 +708,11 @@ export default function Principal() {
         </Card>
 
         {/* DIETA */}
-        <Card className="p-3 sm:p-4 bg-white space-y-2 shadow hover:shadow-md transition-shadow">
-          <h2 className="text-base sm:text-lg font-semibold">
-            Plano Alimentar
+        <Card className="p-4 sm:p-6 bg-white space-y-4 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
+          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+            <span className="text-green-600">🍎</span> Plano Alimentar
           </h2>
-          <p className="text-xs sm:text-sm text-gray-700">
+          <p className="text-sm text-gray-600">
             Clica num prato para ver os produtos e totais de macros.
           </p>
           <div>{renderDietPlan()}</div>

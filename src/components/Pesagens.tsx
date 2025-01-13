@@ -325,7 +325,7 @@ export default function Pesagens() {
   ) {
     const formattedValue = formatNumber(
       currentValue,
-      field.key === "visceralFat" 
+      field.key === "visceralFat"
     );
     const formattedDiff =
       diff > 0
@@ -367,7 +367,6 @@ export default function Pesagens() {
               {field.unit && ` ${field.unit}`}
             </Badge>
           ) : (
-            
             <Badge
               className={`
                 ml-1
@@ -390,6 +389,15 @@ export default function Pesagens() {
   function openDetailDialog(measurement: Measurement) {
     setDetailMeasurement(measurement);
     setDetailDialogOpen(true);
+  }
+
+  // Função para calcular a percentagem de massa muscular
+  function calculateMuscleMassPercent(
+    muscleMassKg: number,
+    weight: number
+  ): number {
+    if (!weight || !muscleMassKg) return 0;
+    return (muscleMassKg / weight) * 100;
   }
 
   /* ---------------------------------------------
@@ -420,25 +428,44 @@ export default function Pesagens() {
       {/* Histórico */}
       {measurements.length === 0 ? (
         <Card className="p-4">
-          <p className="text-sm text-gray-600">Sem pesagens ainda.</p>
+          <p className="text-sm text-gray-600 italic">Sem pesagens ainda.</p>
         </Card>
       ) : (
         <Card className="p-4 space-y-4">
-          <h3 className="text-sm font-semibold text-green-800">
-            Histórico de Pesagens
+          <h3 className="text-base font-semibold text-green-700 flex items-center gap-2">
+            <span className="text-lg">📊</span> Histórico de Pesagens
           </h3>
           <div className="grid gap-2">
             {getOrderedMeasurements().map((m, i) => (
               <div
                 key={i}
-                className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition"
                 onClick={() => openDetailDialog(m)}
+                className="bg-white border border-gray-200 rounded-xl p-3 cursor-pointer 
+                         hover:bg-gray-50 hover:border-green-200 hover:shadow-md 
+                         transition-all duration-300 group"
               >
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-gray-800">
-                    Data: {m.date}
-                  </span>
-                  <span className="text-gray-500">Hora: {m.time}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg text-green-600 opacity-70 group-hover:opacity-100">
+                      📅
+                    </span>
+                    <div>
+                      <p className="font-medium text-gray-800">
+                        {new Date(m.date).toLocaleDateString("pt-PT", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                      <p className="text-sm text-gray-500">{m.time}h</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-400 group-hover:text-green-600 transition-colors">
+                      Ver detalhes →
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -457,12 +484,11 @@ export default function Pesagens() {
           }
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
-              {editMeasurementIndex !== null
-                ? "Editar Pesagem"
-                : "Adicionar Pesagem"}
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">⚖️</span>
+              {editMeasurementIndex !== null ? "Editar" : "Nova"} Pesagem
             </DialogTitle>
           </DialogHeader>
 
@@ -472,86 +498,153 @@ export default function Pesagens() {
                 ? handleEditMeasurementSubmit
                 : handleAddMeasurementSubmit
             }
-            className="space-y-2 mt-2"
+            className="space-y-6"
           >
-            <Label className="text-sm font-semibold">Data</Label>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+            {/* Data e Hora */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-gray-600">Data</Label>
+                <Input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600">Hora</Label>
+                <Input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
 
-            <Label className="text-sm font-semibold">Hora</Label>
-            <Input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-            />
+            {/* Medidas Principais */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
+              <div>
+                <Label className="text-sm text-gray-700">Peso (kg)</Label>
+                <Input
+                  type="number"
+                  value={weight}
+                  onChange={(e) => {
+                    const newWeight = Number(e.target.value);
+                    setWeight(newWeight);
+                    // Atualiza a percentagem quando o peso muda
+                    setMuscleMassPercent(
+                      calculateMuscleMassPercent(muscleMassKg, newWeight)
+                    );
+                  }}
+                  step="0.1"
+                  className="mt-1"
+                />
+              </div>
 
-            <Label className="text-sm font-semibold">Peso (kg)</Label>
-            <Input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(Number(e.target.value))}
-            />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-gray-700">
+                    Massa Muscular (kg)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={muscleMassKg}
+                    onChange={(e) => {
+                      const newMassKg = Number(e.target.value);
+                      setMuscleMassKg(newMassKg);
+                      // Atualiza a percentagem quando a massa muscular muda
+                      setMuscleMassPercent(
+                        calculateMuscleMassPercent(newMassKg, weight)
+                      );
+                    }}
+                    step="0.1"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-700">
+                    % Muscular (calculado)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={muscleMassPercent.toFixed(1)}
+                    disabled
+                    className="mt-1 bg-gray-50 text-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <Label className="text-sm font-semibold">Massa Muscular (%)</Label>
-            <Input
-              type="number"
-              value={muscleMassPercent}
-              onChange={(e) => setMuscleMassPercent(Number(e.target.value))}
-            />
+            {/* Outras Medidas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-gray-600">% Gordura</Label>
+                <Input
+                  type="number"
+                  value={fatMassPercent}
+                  onChange={(e) => setFatMassPercent(Number(e.target.value))}
+                  step="0.1"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600">% Água</Label>
+                <Input
+                  type="number"
+                  value={waterPercent}
+                  onChange={(e) => setWaterPercent(Number(e.target.value))}
+                  step="0.1"
+                  className="mt-1"
+                />
+              </div>
+            </div>
 
-            <Label className="text-sm font-semibold">Massa Muscular (kg)</Label>
-            <Input
-              type="number"
-              value={muscleMassKg}
-              onChange={(e) => setMuscleMassKg(Number(e.target.value))}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm text-gray-600">Altura (cm)</Label>
+                <Input
+                  type="number"
+                  value={height}
+                  onChange={(e) => setHeight(Number(e.target.value))}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-gray-600">
+                  Gordura Visceral
+                </Label>
+                <Input
+                  type="number"
+                  value={visceralFat}
+                  onChange={(e) => setVisceralFat(Number(e.target.value))}
+                  className="mt-1"
+                />
+              </div>
+            </div>
 
-            <Label className="text-sm font-semibold">Massa Gorda (%)</Label>
-            <Input
-              type="number"
-              value={fatMassPercent}
-              onChange={(e) => setFatMassPercent(Number(e.target.value))}
-            />
+            <div>
+              <Label className="text-sm text-gray-600">Idade Metabólica</Label>
+              <Input
+                type="number"
+                value={metabolicAge}
+                onChange={(e) => setMetabolicAge(Number(e.target.value))}
+                className="mt-1"
+              />
+            </div>
 
-            <Label className="text-sm font-semibold">Água Corporal (%)</Label>
-            <Input
-              type="number"
-              value={waterPercent}
-              onChange={(e) => setWaterPercent(Number(e.target.value))}
-            />
-
-            <Label className="text-sm font-semibold">Altura (cm)</Label>
-            <Input
-              type="number"
-              value={height}
-              onChange={(e) => setHeight(Number(e.target.value))}
-            />
-
-            <Label className="text-sm font-semibold">Gordura Visceral</Label>
-            <Input
-              type="number"
-              value={visceralFat}
-              onChange={(e) => setVisceralFat(Number(e.target.value))}
-            />
-
-            <Label className="text-sm font-semibold">Idade Metabólica</Label>
-            <Input
-              type="number"
-              value={metabolicAge}
-              onChange={(e) => setMetabolicAge(Number(e.target.value))}
-            />
-
-            <DialogFooter className="mt-4">
+            <DialogFooter>
               <Button
-                variant="secondary"
+                type="button"
+                variant="outline"
                 onClick={() => setMeasurementDialogOpen(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit">
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
                 {editMeasurementIndex !== null ? "Salvar" : "Adicionar"}
               </Button>
             </DialogFooter>
@@ -564,87 +657,128 @@ export default function Pesagens() {
         open={detailDialogOpen}
         onOpenChange={(open) => {
           setDetailDialogOpen(open);
-          if (!open) {
-            setDetailMeasurement(null);
-          }
+          if (!open) setDetailMeasurement(null);
         }}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">📊</span>
               Detalhes da Pesagem
             </DialogTitle>
           </DialogHeader>
 
           {detailMeasurement && (
-            <Card className="p-4 mt-2 space-y-4">
-              <div>
-                <h2 className="text-base font-semibold">
-                  {detailMeasurement.date} &middot; {detailMeasurement.time}h
-                </h2>
-                <p className="text-xs text-gray-500">
-                  Dados completos da avaliação
-                </p>
+            <div className="space-y-6">
+              {/* Cabeçalho do Detalhe */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-xl text-green-600">📅</span>
+                  <div>
+                    <h3 className="font-medium text-gray-800">
+                      {new Date(detailMeasurement.date).toLocaleDateString(
+                        "pt-PT",
+                        {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        }
+                      )}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {detailMeasurement.time}h
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div>
+              {/* Grid de Dados */}
+              <div className="grid grid-cols-2 gap-4">
                 {fields.map((field) => {
                   const currentValue =
                     detailMeasurement[field.key as keyof Measurement];
                   const diff =
                     getDifferences(detailMeasurement)?.[field.key] || 0;
 
-                  return renderMeasurementRow(
-                    field,
-                    currentValue as number,
-                    diff
+                  return (
+                    <div
+                      key={field.key}
+                      className="bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300"
+                    >
+                      <p className="text-sm text-gray-600 mb-1 flex items-center gap-2">
+                        {field.label}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-medium text-gray-800">
+                          {formatNumber(
+                            currentValue as number,
+                            field.key === "visceralFat"
+                          )}
+                          <span className="text-sm text-gray-500 ml-1">
+                            {field.unit}
+                          </span>
+                        </span>
+                        {diff !== 0 && (
+                          <Badge
+                            className={`
+                              text-xs px-2 py-0.5 
+                              ${getBadgeColor(field.key, diff)}
+                            `}
+                          >
+                            {diff > 0 ? "+" : ""}
+                            {formatNumber(diff, field.key === "visceralFat")}
+                            {field.unit}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            </Card>
-          )}
 
-          <DialogFooter>
-            <div className="pt-2 flex justify-end space-x-2 w-full">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  if (!detailMeasurement) return;
-                  const idx = measurements.findIndex(
-                    (m) =>
-                      m.date === detailMeasurement.date &&
-                      m.time === detailMeasurement.time
-                  );
-                  if (idx >= 0) {
-                    openEditMeasurementDialog(idx);
-                    setDetailDialogOpen(false);
-                  }
-                }}
-              >
-                Editar
-              </Button>
-
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => {
-                  if (!detailMeasurement) return;
-                  const idx = measurements.findIndex(
-                    (m) =>
-                      m.date === detailMeasurement.date &&
-                      m.time === detailMeasurement.time
-                  );
-                  if (idx >= 0) {
-                    handleDeleteMeasurement(idx);
-                    setDetailDialogOpen(false);
-                  }
-                }}
-              >
-                Apagar
-              </Button>
+              {/* Botões de Ação */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hover:bg-green-50"
+                  onClick={() => {
+                    if (!detailMeasurement) return;
+                    const idx = measurements.findIndex(
+                      (m) =>
+                        m.date === detailMeasurement.date &&
+                        m.time === detailMeasurement.time
+                    );
+                    if (idx >= 0) {
+                      openEditMeasurementDialog(idx);
+                      setDetailDialogOpen(false);
+                    }
+                  }}
+                >
+                  ✏️ Editar
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (!detailMeasurement) return;
+                    const idx = measurements.findIndex(
+                      (m) =>
+                        m.date === detailMeasurement.date &&
+                        m.time === detailMeasurement.time
+                    );
+                    if (idx >= 0) {
+                      handleDeleteMeasurement(idx);
+                      setDetailDialogOpen(false);
+                    }
+                  }}
+                >
+                  🗑️ Apagar
+                </Button>
+              </div>
             </div>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>

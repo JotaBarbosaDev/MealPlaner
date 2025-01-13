@@ -55,49 +55,76 @@ export default function Page() {
   }
 
   return (
-    <div className="font-sans bg-gray-50 h-screen flex flex-col">
+    <div className="font-sans bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex flex-col">
       <ToastContainer
         position="top-right"
         autoClose={3000}
-        hideProgressBar
+        hideProgressBar={false}
+        newestOnTop
         closeOnClick
-        pauseOnHover={false}
+        rtl={false}
+        pauseOnFocusLoss
         draggable={false}
+        pauseOnHover={false}
+        theme="light"
+        className="rounded-lg"
+        toastClassName="rounded-lg shadow-md"
+        bodyClassName="text-sm font-medium"
+        progressClassName="bg-green-500"
+        style={{
+          minHeight: "auto",
+        }}
       />
-      <main className="flex-1 overflow-y-auto p-3 pb-16">
+      <main className="flex-1 overflow-y-auto p-4 pb-20 max-w-7xl mx-auto w-full">
         {currentView === "Principal" && <Principal />}
         {currentView === "Dieta" && <Dieta />}
         {currentView === "Treino" && <Treino />}
         {currentView === "Pesagens" && <Pesagens />}
       </main>
-      <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center p-2">
+      <nav className="fixed bottom-0 w-full bg-white/80 backdrop-blur-lg border-t border-gray-200 flex justify-around items-center p-3 shadow-lg">
         <Button
-          variant={currentView === "Principal" ? "default" : "outline"}
-          className="text-xs flex-1 mx-1"
+          variant={currentView === "Principal" ? "default" : "ghost"}
+          className={`text-sm flex-1 mx-1 ${
+            currentView === "Principal"
+              ? "bg-green-600 hover:bg-green-700"
+              : "hover:bg-green-50"
+          }`}
           onClick={() => setCurrentView("Principal")}
         >
-          Principal
+          🏠 Principal
         </Button>
         <Button
-          variant={currentView === "Dieta" ? "default" : "outline"}
-          className="text-xs flex-1 mx-1"
+          variant={currentView === "Dieta" ? "default" : "ghost"}
+          className={`text-sm flex-1 mx-1 ${
+            currentView === "Dieta"
+              ? "bg-green-600 hover:bg-green-700"
+              : "hover:bg-green-50"
+          }`}
           onClick={() => setCurrentView("Dieta")}
         >
-          Dieta
+          🍎 Dieta
         </Button>
         <Button
-          variant={currentView === "Treino" ? "default" : "outline"}
-          className="text-xs flex-1 mx-1"
+          variant={currentView === "Treino" ? "default" : "ghost"}
+          className={`text-sm flex-1 mx-1 ${
+            currentView === "Treino"
+              ? "bg-green-600 hover:bg-green-700"
+              : "hover:bg-green-50"
+          }`}
           onClick={() => setCurrentView("Treino")}
         >
-          Treino
+          💪 Treino
         </Button>
         <Button
-          variant={currentView === "Pesagens" ? "default" : "outline"}
-          className="text-xs flex-1 mx-1"
+          variant={currentView === "Pesagens" ? "default" : "ghost"}
+          className={`text-sm flex-1 mx-1 ${
+            currentView === "Pesagens"
+              ? "bg-green-600 hover:bg-green-700"
+              : "hover:bg-green-50"
+          }`}
           onClick={() => setCurrentView("Pesagens")}
         >
-          Pesagens
+          ⚖️ Pesagens
         </Button>
       </nav>
     </div>
