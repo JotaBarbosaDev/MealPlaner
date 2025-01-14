@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -156,6 +157,9 @@ export default function Treino() {
 
   // Para expandir/minimizar logs por data
   const [openLogDates, setOpenLogDates] = useState<string[]>([]);
+
+  // Adicionar estado para exercícios expandidos após os outros estados
+  const [expandedExercises, setExpandedExercises] = useState<number[]>([]);
 
   /* =============================
      2) FUNÇÕES Exercícios
@@ -651,12 +655,29 @@ export default function Treino() {
           <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
             <span className="text-green-600">💪</span> Exercícios
           </h2>
-          <Button
-            onClick={() => setExerciseDialogOpen(true)}
-            className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
-          >
-            + Novo Exercício
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (expandedExercises.length === exercises.length) {
+                  setExpandedExercises([]);
+                } else {
+                  setExpandedExercises(exercises.map((_, i) => i));
+                }
+              }}
+              className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+            >
+              {expandedExercises.length === exercises.length
+                ? "Minimizar Todos"
+                : "Expandir Todos"}
+            </Button>
+            <Button
+              onClick={() => setExerciseDialogOpen(true)}
+              className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+            >
+              + Novo Exercício
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-3">
@@ -676,14 +697,70 @@ export default function Treino() {
                 key={i}
                 className="bg-white rounded-xl border border-gray-100 hover:border-green-200 transition-all duration-300"
               >
-                <div className="p-4 flex items-center justify-between">
+                <div
+                  className="p-4 flex items-center justify-between cursor-pointer"
+                  onClick={() => {
+                    if (expandedExercises.includes(i)) {
+                      setExpandedExercises(
+                        expandedExercises.filter((idx) => idx !== i)
+                      );
+                    } else {
+                      setExpandedExercises([...expandedExercises, i]);
+                    }
+                  }}
+                >
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
                       <span className="text-green-600 text-lg">💪</span>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-800">{ex.name}</h3>
-                      <div className="flex gap-4 mt-1 text-sm text-gray-500">
+                      {!expandedExercises.includes(i) && (
+                        <div className="flex gap-4 mt-1 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <span className="text-green-600 text-xs">🔄</span>
+                            {ex.series} séries
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="text-green-600 text-xs">🎯</span>
+                            {ex.repetitions} reps
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-gray-400 mr-2">
+                      {expandedExercises.includes(i) ? "▼" : "▶"}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-400 hover:text-green-600 hover:bg-green-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditExerciseClick(i);
+                      }}
+                    >
+                      ✏️
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteExercise(i);
+                      }}
+                    >
+                      🗑️
+                    </Button>
+                  </div>
+                </div>
+                {expandedExercises.includes(i) && (
+                  <div className="px-4 pb-4 pt-2 border-t border-gray-100">
+                    <div className="grid gap-4">
+                      <div className="flex gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <span className="text-green-600 text-xs">🔄</span>
                           {ex.series} séries
@@ -699,25 +776,7 @@ export default function Treino() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-green-600 hover:bg-green-50"
-                      onClick={() => handleEditExerciseClick(i)}
-                    >
-                      ✏️
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => handleDeleteExercise(i)}
-                    >
-                      🗑️
-                    </Button>
-                  </div>
-                </div>
+                )}
               </div>
             ))
           )}
@@ -885,53 +944,126 @@ export default function Treino() {
       <Dialog open={exerciseDialogOpen} onOpenChange={setExerciseDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">💪</span>
               {editExerciseIndex !== undefined ? "Editar" : "Novo"} Exercício
             </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Preencha os detalhes do exercício para{" "}
+              {editExerciseIndex !== undefined ? "editar" : "adicionar"}.
+            </DialogDescription>
           </DialogHeader>
+
           <form
             onSubmit={
               editExerciseIndex !== undefined
                 ? handleEditExerciseSubmit
                 : handleAddExerciseSubmit
             }
-            className="space-y-4"
+            className="space-y-6"
           >
-            <div>
-              <Label>Nome do Exercício</Label>
+            {/* Nome do Exercício */}
+            <div className="space-y-2">
+              <Label className="text-sm text-gray-700">Nome do Exercício</Label>
               <Input
                 value={exerciseName}
                 onChange={(e) => setExerciseName(e.target.value)}
                 placeholder="Ex: Supino Reto"
+                className="bg-white/80 backdrop-blur-sm"
               />
             </div>
-            <div>
-              <Label>Séries</Label>
-              <Input
-                type="number"
-                value={exerciseSeries}
-                onChange={(e) => setExerciseSeries(Number(e.target.value))}
-              />
+
+            {/* Grid de Configurações */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
+              <h3 className="font-medium text-gray-700 flex items-center gap-2">
+                <span className="text-green-600">⚙️</span> Configurações
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Séries */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-green-600">🔄</span> Séries
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={exerciseSeries}
+                      onChange={(e) =>
+                        setExerciseSeries(Number(e.target.value))
+                      }
+                      min="1"
+                      className="pr-8 bg-gradient-to-r from-green-50 to-green-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      x
+                    </span>
+                  </div>
+                </div>
+
+                {/* Repetições */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-green-600">🎯</span> Repetições
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={exerciseRepetitions}
+                      onChange={(e) =>
+                        setExerciseRepetitions(Number(e.target.value))
+                      }
+                      min="1"
+                      className="pr-12 bg-gradient-to-r from-amber-50 to-amber-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      reps
+                    </span>
+                  </div>
+                </div>
+
+                {/* Pausa */}
+                <div className="col-span-2 space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-green-600">⏱️</span> Tempo de Pausa
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={exercisePause}
+                      onChange={(e) => setExercisePause(Number(e.target.value))}
+                      min="0"
+                      className="pr-16 bg-gradient-to-r from-blue-50 to-blue-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      segundos
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <Label>Repetições</Label>
-              <Input
-                type="number"
-                value={exerciseRepetitions}
-                onChange={(e) => setExerciseRepetitions(Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <Label>Pausa (segundos)</Label>
-              <Input
-                type="number"
-                value={exercisePause}
-                onChange={(e) => setExercisePause(Number(e.target.value))}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                {editExerciseIndex !== undefined ? "Salvar" : "Adicionar"}
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  clearExerciseFields();
+                  setEditExerciseIndex(undefined);
+                  setExerciseDialogOpen(false);
+                }}
+                className="hover:bg-gray-100"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white gap-2"
+              >
+                <span>{editExerciseIndex !== undefined ? "💾" : "➕"}</span>
+                {editExerciseIndex !== undefined
+                  ? "Salvar Alterações"
+                  : "Adicionar Exercício"}
               </Button>
             </DialogFooter>
           </form>
@@ -942,53 +1074,133 @@ export default function Treino() {
       <Dialog open={workoutDialogOpen} onOpenChange={setWorkoutDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">🏋️</span>
               {editWorkoutIndex !== undefined ? "Editar" : "Novo"} Treino
             </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Configure os detalhes do treino e selecione os exercícios que o
+              compõem.
+            </DialogDescription>
           </DialogHeader>
+
           <form
             onSubmit={
               editWorkoutIndex !== undefined
                 ? handleEditWorkoutSubmit
                 : handleAddWorkoutSubmit
             }
-            className="space-y-4"
+            className="space-y-6"
           >
-            <div>
-              <Label>Nome do Treino</Label>
+            {/* Nome do Treino */}
+            <div className="space-y-2">
+              <Label className="text-sm text-gray-700">Nome do Treino</Label>
               <Input
                 value={workoutName}
                 onChange={(e) => setWorkoutName(e.target.value)}
                 placeholder="Ex: Treino A - Peito e Tríceps"
+                className="bg-white/80 backdrop-blur-sm"
               />
             </div>
-            <div>
-              <Label>Selecione os Exercícios</Label>
-              <div className="mt-2 border rounded-lg p-3 max-h-60 overflow-y-auto space-y-2">
-                {exercises.map((ex, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedExercises.includes(i)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedExercises([...selectedExercises, i]);
-                        } else {
-                          setSelectedExercises(
-                            selectedExercises.filter((idx) => idx !== i)
-                          );
-                        }
-                      }}
-                      className="rounded border-gray-300"
-                    />
-                    <span className="text-sm">{ex.name}</span>
-                  </div>
-                ))}
+
+            {/* Seleção de Exercícios */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
+              <h3 className="font-medium text-gray-700 flex items-center gap-2">
+                <span className="text-green-600">💪</span> Exercícios do Treino
+                <span className="ml-auto text-xs text-gray-500">
+                  {selectedExercises.length} selecionados
+                </span>
+              </h3>
+
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200">
+                <div className="max-h-[300px] overflow-y-auto p-3 space-y-2">
+                  {exercises.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-sm text-gray-500">
+                        Nenhum exercício cadastrado
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setWorkoutDialogOpen(false);
+                          setExerciseDialogOpen(true);
+                        }}
+                        className="mt-2 text-green-600 hover:text-green-700"
+                      >
+                        Cadastrar Exercício
+                      </Button>
+                    </div>
+                  ) : (
+                    exercises.map((ex, i) => (
+                      <div
+                        key={i}
+                        className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${
+                          selectedExercises.includes(i)
+                            ? "bg-green-50 border border-green-200"
+                            : "hover:bg-gray-50 border border-transparent"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedExercises.includes(i)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedExercises([...selectedExercises, i]);
+                            } else {
+                              setSelectedExercises(
+                                selectedExercises.filter((idx) => idx !== i)
+                              );
+                            }
+                          }}
+                          className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-700">{ex.name}</p>
+                          <div className="flex gap-3 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <span className="text-green-600">🔄</span>
+                              {ex.series} séries
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="text-green-600">🎯</span>
+                              {ex.repetitions} reps
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="text-green-600">⏱️</span>
+                              {ex.pause}s
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-green-600 hover:bg-green-700">
-                {editWorkoutIndex !== undefined ? "Salvar" : "Adicionar"}
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  clearWorkoutFields();
+                  setEditWorkoutIndex(undefined);
+                  setWorkoutDialogOpen(false);
+                }}
+                className="hover:bg-gray-100"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                disabled={selectedExercises.length === 0}
+              >
+                <span>{editWorkoutIndex !== undefined ? "💾" : "➕"}</span>
+                {editWorkoutIndex !== undefined
+                  ? "Salvar Alterações"
+                  : "Adicionar Treino"}
               </Button>
             </DialogFooter>
           </form>

@@ -130,6 +130,8 @@ export default function Principal() {
   const [newSetWeight, setNewSetWeight] = useState(0);
   const [editSetIndex, setEditSetIndex] = useState<number | null>(null);
 
+  const [openLogDates, setOpenLogDates] = useState<string[]>([]);
+
   /* ----------------------
      FUNÇÃO: Adicionar/Editar Set
   -----------------------*/
@@ -229,68 +231,158 @@ export default function Principal() {
     }
 
     const todayDate = new Date().toISOString().slice(0, 10);
-    const logEntry = trainingLogs.find(
-      (log) =>
-        log.date === todayDate &&
-        log.dayOfWeek === selectedDay &&
-        log.workoutName === assignedWorkout
-    );
 
-    const exLog = logEntry?.exerciseLogs.find(
-      (el) => el.exerciseName === selectedExercise.name
-    );
-
-    if (!exLog || exLog.sets.length === 0) {
-      return (
-        <div className="bg-gray-50 p-4 rounded-lg text-center">
-          <p className="text-sm text-gray-500">
-            Nenhum set registado ainda para {selectedExercise.name}.
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Use o formulário acima para adicionar sets.
-          </p>
-        </div>
-      );
-    }
+    // Filtra logs do mesmo dia da semana e mesmo treino
+    const relevantLogs = trainingLogs
+      .filter(
+        (log) =>
+          log.dayOfWeek === selectedDay && log.workoutName === assignedWorkout
+      )
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return (
-      <div className="space-y-2">
-        {exLog.sets.map((s, idx) => (
-          <div
-            key={idx}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-          >
-            <div className="p-3 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
-                  {idx + 1}
-                </span>
-                <div className="flex gap-4 text-sm">
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-600">🔄</span>
-                    {s.reps} reps
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="text-green-600">⚖️</span>
-                    {s.weight} kg
-                  </span>
+      <div className="space-y-6">
+        {/* Sets de Hoje */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-green-700 flex items-center gap-2">
+            <span className="text-lg">📝</span> Sets de Hoje
+          </h4>
+          {(() => {
+            const todayLog = relevantLogs.find((log) => log.date === todayDate);
+            const exLog = todayLog?.exerciseLogs.find(
+              (el) => el.exerciseName === selectedExercise.name
+            );
+
+            if (!exLog || exLog.sets.length === 0) {
+              return (
+                <div className="bg-gray-50 p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-500">
+                    Nenhum set registado ainda para {selectedExercise.name}.
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Use o formulário acima para adicionar sets.
+                  </p>
+                </div>
+              );
+            }
+
+            return exLog.sets.map((s, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+              >
+                <div className="p-3 flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
+                      {idx + 1}
+                    </span>
+                    <div className="flex gap-4 text-sm">
+                      <span className="flex items-center gap-1">
+                        <span className="text-green-600">🔄</span>
+                        {s.reps} reps
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="text-green-600">⚖️</span>
+                        {s.weight} kg
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-400 hover:text-green-600 hover:bg-green-50"
+                      onClick={() => {
+                        setNewSetReps(s.reps);
+                        setNewSetWeight(s.weight);
+                        setEditSetIndex(idx);
+                      }}
+                    >
+                      ✏️
+                    </Button>
+                  </div>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="hover:bg-green-50 text-green-600"
-                onClick={() => {
-                  setEditSetIndex(idx);
-                  setNewSetReps(s.reps);
-                  setNewSetWeight(s.weight);
-                }}
-              >
-                ✏️
-              </Button>
-            </div>
+            ));
+          })()}
+        </div>
+
+        {/* Histórico de Sets */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-green-700 flex items-center gap-2">
+            <span className="text-lg">📅</span> Histórico
+          </h4>
+          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+            {relevantLogs
+              .filter((log) => log.date !== todayDate)
+              .map((log, idx) => {
+                const exerciseLog = log.exerciseLogs.find(
+                  (el) => el.exerciseName === selectedExercise.name
+                );
+
+                if (!exerciseLog) return null;
+
+                const isOpen = openLogDates.includes(log.date);
+
+                return (
+                  <div
+                    key={idx}
+                    className="border border-gray-200 rounded-xl overflow-hidden bg-white"
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full text-sm justify-between p-4 hover:bg-gray-50"
+                      onClick={() => toggleLogDate(log.date)}
+                    >
+                      <span className="font-medium text-gray-700 flex items-center gap-2">
+                        <span className="text-green-600">📅</span>
+                        {new Date(log.date).toLocaleDateString("pt-PT", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
+                      <span
+                        className={`transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      >
+                        ▼
+                      </span>
+                    </Button>
+
+                    {isOpen && (
+                      <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-2">
+                        {exerciseLog.sets.map((set, setIdx) => (
+                          <div
+                            key={setIdx}
+                            className="bg-white rounded-lg border border-gray-200 p-3 flex justify-between items-center"
+                          >
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
+                                {setIdx + 1}
+                              </span>
+                              <div className="flex gap-4 text-sm">
+                                <span className="flex items-center gap-1">
+                                  <span className="text-green-600">🔄</span>
+                                  {set.reps} reps
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <span className="text-green-600">⚖️</span>
+                                  {set.weight} kg
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
-        ))}
+        </div>
       </div>
     );
   }
@@ -588,6 +680,14 @@ export default function Principal() {
         )}
       </div>
     ));
+  }
+
+  function toggleLogDate(date: string) {
+    if (openLogDates.includes(date)) {
+      setOpenLogDates(openLogDates.filter((d) => d !== date));
+    } else {
+      setOpenLogDates([...openLogDates, date]);
+    }
   }
 
   /* ----------------------

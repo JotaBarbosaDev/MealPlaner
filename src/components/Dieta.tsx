@@ -4,9 +4,15 @@ import React, {FormEvent, useState} from "react";
 import useLocalStorage from "use-local-storage";
 import {toast} from "react-toastify";
 
-// Imports “ui” do shadcn
+// Imports "ui" do shadcn
 import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {
@@ -14,6 +20,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -23,6 +30,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import {Badge} from "@/components/ui/badge";
 
 /* -------------------------------------
     Tipos e Interfaces para Dieta
@@ -707,9 +715,26 @@ export default function Dieta() {
     setMeals(newMeals);
   }
 
-  function handleRemovePlateFromMeal(mIndex: number, pIndex: number) {
+  // Apagar refeição (nova função)
+  function handleDeleteMeal(index: number) {
     const newMeals = [...meals];
-    newMeals[mIndex].plates.splice(pIndex, 1);
+    newMeals.splice(index, 1);
+    setMeals(newMeals);
+    toast("Refeição removida!");
+  }
+
+  // Editar prato na refeição
+  function handleEditPlateInMeal(mealIndex: number, plateIndex: number) {
+    setEditingMealIndex(mealIndex);
+    setEditingPlateInMealIndex(plateIndex);
+    setCurrentPlate({...meals[mealIndex].plates[plateIndex]});
+    setCreatePlateDialogOpen(true);
+  }
+
+  // Renomeando handleRemovePlateFromMeal para handleDeletePlateFromMeal para manter consistência
+  function handleDeletePlateFromMeal(mealIndex: number, plateIndex: number) {
+    const newMeals = [...meals];
+    newMeals[mealIndex].plates.splice(plateIndex, 1);
     setMeals(newMeals);
     toast("Prato removido da refeição!");
   }
@@ -823,8 +848,8 @@ export default function Dieta() {
   return (
     <div className="space-y-6 pb-8">
       {/* 
-          MOBILE FIRST: As “Cards” já são responsivas e ficam empilhadas.
-          Em desktop, podemos usar “md:grid md:grid-cols-2” para colocar alguns cards lado a lado — a seu critério.
+          MOBILE FIRST: As "Cards" já são responsivas e ficam empilhadas.
+          Em desktop, podemos usar "md:grid md:grid-cols-2" para colocar alguns cards lado a lado — a seu critério.
         */}
 
       {/* (C) Ações Rápidas */}
@@ -1283,68 +1308,148 @@ export default function Dieta() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Adicionar Produto</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">🥗</span> Novo Produto
+            </DialogTitle>
+            <p className="text-sm text-gray-500">
+              Insira os valores nutricionais por 100g de produto.
+            </p>
           </DialogHeader>
-          <form onSubmit={handleAddProductSubmit} className="space-y-2">
-            <Label>Nome do Produto:</Label>
-            <Input
-              value={productNameField}
-              onChange={(e) => setProductNameField(e.target.value)}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Proteína (g/100g):</Label>
-            <Input
-              type="number"
-              value={productPField}
-              onChange={(e) => setProductPField(Number(e.target.value))}
-              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                if (Number(e.target.value) === 0) e.target.value = "";
-              }}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Gordura (g/100g):</Label>
-            <Input
-              type="number"
-              value={productFField}
-              onChange={(e) => setProductFField(Number(e.target.value))}
-              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                if (Number(e.target.value) === 0) e.target.value = "";
-              }}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Carboidrato (g/100g):</Label>
-            <Input
-              type="number"
-              value={productCField}
-              onChange={(e) => setProductCField(Number(e.target.value))}
-              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                if (Number(e.target.value) === 0) e.target.value = "";
-              }}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Calorias (kcal/100g):</Label>
-            <Input
-              type="number"
-              value={productCalField}
-              onChange={(e) => setProductCalField(Number(e.target.value))}
-              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                if (Number(e.target.value) === 0) e.target.value = "";
-              }}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <DialogFooter>
+
+          <form onSubmit={handleAddProductSubmit} className="space-y-6">
+            {/* Nome do Produto */}
+            <div className="space-y-2">
+              <Label className="text-sm text-gray-700">Nome do Produto</Label>
+              <Input
+                value={productNameField}
+                onChange={(e) => setProductNameField(e.target.value)}
+                placeholder="Ex: Peito de Frango"
+                className="bg-white/80 backdrop-blur-sm"
+              />
+            </div>
+
+            {/* Macros Grid */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
+              <h3 className="font-medium text-gray-700 flex items-center gap-2">
+                <span className="text-green-600">📊</span> Valores Nutricionais
+                <span className="text-xs text-gray-500 ml-auto">por 100g</span>
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Calorias */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-green-600">🔥</span> Calorias
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productCalField}
+                      onChange={(e) =>
+                        setProductCalField(Number(e.target.value))
+                      }
+                      onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                        if (Number(e.target.value) === 0) {
+                          e.target.value = "";
+                        }
+                      }}
+                      step="1"
+                      className="pr-12 bg-gradient-to-r from-green-50 to-green-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      kcal
+                    </span>
+                  </div>
+                </div>
+
+                {/* Carboidratos */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-amber-600">🌾</span> Carboidratos
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productCField}
+                      onChange={(e) => setProductCField(Number(e.target.value))}
+                      onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                        if (Number(e.target.value) === 0) {
+                          e.target.value = "";
+                        }
+                      }}
+                      step="0.1"
+                      className="pr-8 bg-gradient-to-r from-amber-50 to-amber-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      g
+                    </span>
+                  </div>
+                </div>
+
+                {/* Proteína */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-rose-600">🥩</span> Proteína
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productPField}
+                      onChange={(e) => setProductPField(Number(e.target.value))}
+                      onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                        if (Number(e.target.value) === 0) {
+                          e.target.value = "";
+                        }
+                      }}
+                      step="0.1"
+                      className="pr-8 bg-gradient-to-r from-rose-50 to-rose-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      g
+                    </span>
+                  </div>
+                </div>
+
+                {/* Gorduras */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-blue-600">🥑</span> Gorduras
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productFField}
+                      onChange={(e) => setProductFField(Number(e.target.value))}
+                      onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+                        if (Number(e.target.value) === 0) {
+                          e.target.value = "";
+                        }
+                      }}
+                      step="0.1"
+                      className="pr-8 bg-gradient-to-r from-blue-50 to-blue-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      g
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
               <Button
-                variant="secondary"
+                type="button"
+                variant="outline"
                 onClick={() => setAddProductDialogOpen(false)}
-                className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
+                className="hover:bg-gray-100"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
+                className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
-                Adicionar
+                <span>➕</span> Adicionar
               </Button>
             </DialogFooter>
           </form>
@@ -1358,56 +1463,128 @@ export default function Dieta() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Produto</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">✏️</span> Editar Produto
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Atualize os valores nutricionais por 100g de produto.
+            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditProductSubmit} className="space-y-2">
-            <Label>Nome do Produto:</Label>
-            <Input
-              value={productNameField}
-              onChange={(e) => setProductNameField(e.target.value)}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Proteína (g/100g):</Label>
-            <Input
-              type="number"
-              value={productPField}
-              onChange={(e) => setProductPField(Number(e.target.value))}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Gordura (g/100g):</Label>
-            <Input
-              type="number"
-              value={productFField}
-              onChange={(e) => setProductFField(Number(e.target.value))}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Carboidrato (g/100g):</Label>
-            <Input
-              type="number"
-              value={productCField}
-              onChange={(e) => setProductCField(Number(e.target.value))}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <Label>Calorias (kcal/100g):</Label>
-            <Input
-              type="number"
-              value={productCalField}
-              onChange={(e) => setProductCalField(Number(e.target.value))}
-              className="mt-1 focus:ring-2 focus:ring-green-500 transition-all duration-300"
-            />
-            <DialogFooter>
+
+          <form onSubmit={handleEditProductSubmit} className="space-y-6">
+            {/* Nome do Produto */}
+            <div className="space-y-2">
+              <Label className="text-sm text-gray-700">Nome do Produto</Label>
+              <Input
+                value={productNameField}
+                onChange={(e) => setProductNameField(e.target.value)}
+                placeholder="Ex: Peito de Frango"
+                className="bg-white/80 backdrop-blur-sm"
+              />
+            </div>
+
+            {/* Macros Grid */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
+              <h3 className="font-medium text-gray-700 flex items-center gap-2">
+                <span className="text-green-600">📊</span> Valores Nutricionais
+                <span className="text-xs text-gray-500 ml-auto">por 100g</span>
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Calorias */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-green-600">🔥</span> Calorias
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productCalField}
+                      onChange={(e) =>
+                        setProductCalField(Number(e.target.value))
+                      }
+                      step="1"
+                      className="pr-12 bg-gradient-to-r from-green-50 to-green-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      kcal
+                    </span>
+                  </div>
+                </div>
+
+                {/* Carboidratos */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-amber-600">🌾</span> Carboidratos
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productCField}
+                      onChange={(e) => setProductCField(Number(e.target.value))}
+                      step="0.1"
+                      className="pr-8 bg-gradient-to-r from-amber-50 to-amber-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      g
+                    </span>
+                  </div>
+                </div>
+
+                {/* Proteína */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-rose-600">🥩</span> Proteína
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productPField}
+                      onChange={(e) => setProductPField(Number(e.target.value))}
+                      step="0.1"
+                      className="pr-8 bg-gradient-to-r from-rose-50 to-rose-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      g
+                    </span>
+                  </div>
+                </div>
+
+                {/* Gorduras */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600 flex items-center gap-1">
+                    <span className="text-blue-600">🥑</span> Gorduras
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      value={productFField}
+                      onChange={(e) => setProductFField(Number(e.target.value))}
+                      step="0.1"
+                      className="pr-8 bg-gradient-to-r from-blue-50 to-blue-100/50"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                      g
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
               <Button
-                variant="secondary"
+                type="button"
+                variant="outline"
                 onClick={() => setEditProductDialogOpen(false)}
-                className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
+                className="hover:bg-gray-100"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
+                className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
-                Salvar
+                <span>💾</span> Salvar Alterações
               </Button>
             </DialogFooter>
           </form>
@@ -1686,131 +1863,163 @@ export default function Dieta() {
 
       {/* Dialog Gerir Refeições */}
       <Dialog open={mealDialogOpen} onOpenChange={setMealDialogOpen}>
-        <DialogContent className="max-w-md overflow-auto space-y-4">
-          <DialogHeader>
-            <DialogTitle>Gerir Refeições</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-white pb-4 z-10">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">🍽️</span> Gerir Refeições
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Cada refeição só deve ter pratos idênticos em macros, para
+              garantir consistência nutricional.
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-gray-600">
-            Cada refeição só deve ter pratos idênticos (em macros).
-          </p>
-          <div className="space-y-2 mt-2">
-            <Label className="text-sm">Refeição (p/ adicionar prato):</Label>
-            <select
-              className="border rounded p-1 w-full text-sm"
-              onChange={(e) =>
-                setAddPlateMealIndex(
-                  e.target.value === "" ? undefined : parseInt(e.target.value)
-                )
-              }
-            >
-              <option value="">Selecione a refeição</option>
-              {meals.map((m, i) => (
-                <option key={i} value={i}>
-                  {m.name}
-                </option>
-              ))}
-            </select>
 
-            <Label className="text-sm">Prato (a adicionar):</Label>
-            <select
-              className="border rounded p-1 w-full text-sm"
-              onChange={(e) =>
-                setAddPlatePlateIndex(
-                  e.target.value === "" ? undefined : parseInt(e.target.value)
-                )
-              }
-            >
-              <option value="">Selecione o prato</option>
-              {plates.map((pl, i) => (
-                <option key={i} value={i}>
-                  {pl.name} ({pl.mealName})
-                </option>
-              ))}
-            </select>
-
-            <Button
-              onClick={addPlateToMealFromUI}
-              className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
-            >
-              Adicionar Prato
-            </Button>
-          </div>
-
-          <hr className="my-4" />
-
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">
-              Refeições &amp; Pratos (Iso-nutri)
-            </h3>
-            {meals.map((m, mi) => {
-              const mealMacros = calculateMealTargets(m.name);
-              if (m.plates.length === 0) {
-                return (
-                  <Card key={mi} className="p-3 bg-white">
-                    <h4 className="font-semibold text-green-700">{m.name}</h4>
-                    <p>Nenhum prato nesta refeição.</p>
-                  </Card>
-                );
-              }
-              // Se há pratos
-              const platesList = m.plates.map((pl, pi) => {
-                const {p, f, c, cal} = sumPlate(pl);
-                return (
-                  <Card
-                    key={pi}
-                    className="p-2 bg-gray-50 flex items-center justify-between mb-2 last:mb-0"
+          <div className="space-y-6">
+            {/* Seção de Adicionar Prato */}
+            <Card className="p-4 bg-green-50/50 border-green-100">
+              <CardHeader className="p-0 pb-4">
+                <CardTitle className="text-lg font-semibold text-green-700">
+                  Adicionar Novo Prato
+                </CardTitle>
+              </CardHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Refeição Destino
+                  </Label>
+                  <Select
+                    onValueChange={(val) =>
+                      setAddPlateMealIndex(
+                        val === "placeholder" ? undefined : parseInt(val)
+                      )
+                    }
+                    value={addPlateMealIndex?.toString() || "placeholder"}
                   >
-                    <div className="text-sm">
-                      <strong>{pl.name}</strong> ({pl.mealName})
-                      <br />
-                      Cal:{cal.toFixed(1)} | HC:{c.toFixed(1)} | P:
-                      {p.toFixed(1)} | G:{f.toFixed(1)}
-                    </div>
-                    <div className="space-x-2">
+                    <SelectTrigger className="w-full bg-white">
+                      <SelectValue placeholder="Selecione a refeição" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="placeholder" disabled>
+                        Selecione a refeição
+                      </SelectItem>
+                      {meals.map((m, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {m.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    Prato a Adicionar
+                  </Label>
+                  <Select
+                    onValueChange={(val) =>
+                      setAddPlatePlateIndex(
+                        val === "placeholder" ? undefined : parseInt(val)
+                      )
+                    }
+                    value={addPlatePlateIndex?.toString() || "placeholder"}
+                  >
+                    <SelectTrigger className="w-full bg-white">
+                      <SelectValue placeholder="Selecione o prato" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="placeholder" disabled>
+                        Selecione o prato
+                      </SelectItem>
+                      {plates.map((pl, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {pl.name} ({pl.mealName})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  onClick={addPlateToMealFromUI}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
+                >
+                  <span>➕</span> Adicionar Prato
+                </Button>
+              </div>
+            </Card>
+
+            {/* Lista de Refeições */}
+            <div className="space-y-4">
+              {meals.map((meal, mealIndex) => (
+                <Card key={mealIndex} className="p-4">
+                  <CardHeader className="p-0 pb-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                        {meal.name}
+                        <Badge variant="secondary" className="ml-2">
+                          {meal.plates.length} pratos
+                        </Badge>
+                      </CardTitle>
                       <Button
+                        variant="outline"
                         size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          setEditingMealIndex(mi);
-                          setEditingPlateInMealIndex(pi);
-                          setCurrentPlate({...pl});
-                          setCreatePlateDialogOpen(true);
-                        }}
-                        className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 transition-all duration-300"
+                        onClick={() => handleDeleteMeal(mealIndex)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
                       >
-                        Editar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleRemovePlateFromMeal(mi, pi)}
-                        className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-all duration-300"
-                      >
-                        Apagar
+                        <span>🗑️</span> Remover
                       </Button>
                     </div>
-                  </Card>
-                );
-              });
-              return (
-                <Card key={mi} className="p-3 bg-white space-y-2">
-                  <h4 className="font-semibold text-green-700">{m.name}</h4>
-                  <p className="text-xs text-gray-600">
-                    Metas: {mealMacros.cal.toFixed(1)}kcal | HC:
-                    {mealMacros.c.toFixed(1)} | P:{mealMacros.p.toFixed(1)} | G:
-                    {mealMacros.f.toFixed(1)}
-                  </p>
-                  {platesList}
+                  </CardHeader>
+
+                  <div className="space-y-3">
+                    {meal.plates.map((plate, plateIndex) => (
+                      <Card key={plateIndex} className="p-3 bg-gray-50/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className="font-medium">{plate.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {sumPlate(plate).cal.toFixed(1)}kcal | P:{" "}
+                              {sumPlate(plate).p.toFixed(1)}g | C:{" "}
+                              {sumPlate(plate).c.toFixed(1)}g | G:{" "}
+                              {sumPlate(plate).f.toFixed(1)}g
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleEditPlateInMeal(mealIndex, plateIndex)
+                              }
+                              className="hover:bg-green-50 gap-1"
+                            >
+                              <span>✏️</span> Editar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                handleDeletePlateFromMeal(mealIndex, plateIndex)
+                              }
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-1"
+                            >
+                              <span>🗑️</span> Remover
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </Card>
-              );
-            })}
+              ))}
+            </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 bg-white pt-4 z-10">
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={() => setMealDialogOpen(false)}
-              className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
+              className="hover:bg-gray-100"
             >
               Fechar
             </Button>
@@ -1820,19 +2029,202 @@ export default function Dieta() {
 
       {/* Dialog Ver Plano Atual */}
       <Dialog open={viewPlanDialogOpen} onOpenChange={setViewPlanDialogOpen}>
-        <DialogContent className="max-h-[90%] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>Plano Atual</DialogTitle>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sticky top-0 bg-white pb-4 z-10">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <span className="text-green-600">📋</span> Plano Atual
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Aqui estão todas as refeições e pratos já criados. Cada refeição
+              aceita apenas pratos idênticos em macros.
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-gray-600">
-            Aqui estão todas as refeições e pratos já criados. Cada refeição
-            aceita apenas pratos idênticos em macros.
-          </p>
-          <div className="mt-2">{renderFullPlanDetail()}</div>
-          <DialogFooter>
+
+          <div className="space-y-6">
+            {meals.length === 0 ? (
+              <div className="bg-gray-50 rounded-xl p-8 text-center">
+                <p className="text-gray-500 mb-2">Nenhum plano criado ainda.</p>
+                <Button
+                  onClick={() => {
+                    setViewPlanDialogOpen(false);
+                    setMealDialogOpen(true);
+                  }}
+                  className="bg-green-50 text-green-600 hover:bg-green-100"
+                >
+                  Começar a Criar Plano
+                </Button>
+              </div>
+            ) : (
+              <>
+                {meals.map((m, i) => {
+                  const mealMacros = calculateMealTargets(m.name);
+
+                  if (m.plates.length === 0) {
+                    return (
+                      <Card key={i} className="bg-white">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                              {m.name}
+                              <Badge variant="outline" className="ml-2">
+                                Vazia
+                              </Badge>
+                            </CardTitle>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Meta: {mealMacros.cal.toFixed(1)}kcal | P:{" "}
+                            {mealMacros.p.toFixed(1)}g | C:{" "}
+                            {mealMacros.c.toFixed(1)}g | G:{" "}
+                            {mealMacros.f.toFixed(1)}g
+                          </p>
+                        </CardHeader>
+                      </Card>
+                    );
+                  }
+
+                  return (
+                    <Card key={i} className="bg-white">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                            {m.name}
+                            <Badge variant="secondary" className="ml-2">
+                              {m.plates.length}{" "}
+                              {m.plates.length === 1 ? "prato" : "pratos"}
+                            </Badge>
+                          </CardTitle>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Meta: {mealMacros.cal.toFixed(1)}kcal | P:{" "}
+                          {mealMacros.p.toFixed(1)}g | C:{" "}
+                          {mealMacros.c.toFixed(1)}g | G:{" "}
+                          {mealMacros.f.toFixed(1)}g
+                        </p>
+                      </CardHeader>
+
+                      <div className="p-6 pt-0 space-y-4">
+                        {m.plates.map((pl, j) => {
+                          const sp = sumPlate(pl);
+                          return (
+                            <Card key={j} className="bg-gray-50/50">
+                              <CardHeader className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <CardTitle className="text-base font-medium">
+                                    {pl.name}
+                                  </CardTitle>
+                                  <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
+                                    {sp.cal.toFixed(1)} kcal
+                                  </Badge>
+                                </div>
+                                <div className="flex gap-3 text-sm text-muted-foreground mt-1">
+                                  <span>P: {sp.p.toFixed(1)}g</span>
+                                  <span>C: {sp.c.toFixed(1)}g</span>
+                                  <span>G: {sp.f.toFixed(1)}g</span>
+                                </div>
+                              </CardHeader>
+
+                              <div className="px-4 pb-4">
+                                <div className="space-y-2">
+                                  {pl.items.map((it, k) => {
+                                    const prod = products[it.productIndex];
+                                    const factor = it.grams / 100;
+                                    return (
+                                      <div
+                                        key={k}
+                                        className="flex items-center justify-between bg-white rounded-lg p-2 text-sm"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-green-600">
+                                            🥗
+                                          </span>
+                                          <div>
+                                            <p className="font-medium">
+                                              {prod.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {it.grams.toFixed(1)}g
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="text-xs text-right text-muted-foreground">
+                                          <p>
+                                            P: {(prod.p * factor).toFixed(1)}g
+                                          </p>
+                                          <p>
+                                            C: {(prod.c * factor).toFixed(1)}g
+                                          </p>
+                                          <p>
+                                            G: {(prod.f * factor).toFixed(1)}g
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  );
+                })}
+
+                {/* Totais */}
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                      <span className="text-green-600">📊</span> Total Diário
+                    </CardTitle>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                      <div className="bg-white rounded-xl p-3 shadow-sm">
+                        <p className="text-sm font-medium text-gray-600">
+                          Calorias
+                        </p>
+                        <p className="text-xl font-semibold text-gray-800">
+                          {calculateTotals().cal.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500">kcal</p>
+                      </div>
+                      <div className="bg-white rounded-xl p-3 shadow-sm">
+                        <p className="text-sm font-medium text-gray-600">
+                          Proteínas
+                        </p>
+                        <p className="text-xl font-semibold text-gray-800">
+                          {calculateTotals().p.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500">gramas</p>
+                      </div>
+                      <div className="bg-white rounded-xl p-3 shadow-sm">
+                        <p className="text-sm font-medium text-gray-600">
+                          Carboidratos
+                        </p>
+                        <p className="text-xl font-semibold text-gray-800">
+                          {calculateTotals().c.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500">gramas</p>
+                      </div>
+                      <div className="bg-white rounded-xl p-3 shadow-sm">
+                        <p className="text-sm font-medium text-gray-600">
+                          Gorduras
+                        </p>
+                        <p className="text-xl font-semibold text-gray-800">
+                          {calculateTotals().f.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500">gramas</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="sticky bottom-0 bg-white pt-4 z-10">
             <Button
+              variant="outline"
               onClick={() => setViewPlanDialogOpen(false)}
-              className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
+              className="hover:bg-gray-100"
             >
               Fechar
             </Button>
