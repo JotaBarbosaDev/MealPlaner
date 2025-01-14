@@ -1,6 +1,6 @@
 # 🏋️‍♂️ MealPlaner - Gestão de Treinos & Dieta
 
-Uma aplicação web moderna e responsiva para gerir os seus treinos e plano alimentar. Desenvolvida com React, Tailwind CSS e shadcn/ui, oferecendo uma experiência fluida tanto em computador como em telemóvel.
+Uma aplicação web para gerir os seus treinos e plano alimentar. Desenvolvida com React, Tailwind CSS e shadcn/ui, oferecendo uma experiência fluida tanto em computador como em telemóvel.
 
 ![Estado](https://img.shields.io/badge/estado-em%20desenvolvimento-green)
 ![Versão](https://img.shields.io/badge/versão-1.0.0-blue)
