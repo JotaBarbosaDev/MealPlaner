@@ -1,14 +1,48 @@
 "use client";
 
-import React, {FormEvent, useState} from "react";
+import React, { FormEvent, useState } from "react";
 import useLocalStorage from "use-local-storage";
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Dumbbell, 
+  Calendar, 
+  Repeat, 
+  Timer, 
+  Target, 
+  Save, 
+  PlusCircle, 
+  Edit, 
+  Trash, 
+  ChevronDown, 
+  Weight, 
+  ActivitySquare, 
+  Bed, 
+  Settings,
+  CheckCircle2,
+  Pencil,
+  Plus,
+  ClipboardList,
+  ArrowDownCircle,
+  Award,
+  RefreshCw,
+  FileText,
+  ListChecks,
+  BarChart3,
+  CirclePlus,
+  CircleCheck
+} from "lucide-react";
+
+// Componentes compartilhados
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { StatCard } from "@/components/shared/StatCard";
+import { ExpandableCard } from "@/components/shared/ExpandableCard";
 
 // UI do shadcn
-import {Card} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +58,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 /* -------------------------------------
    TIPOS de TREINO
@@ -44,7 +79,6 @@ interface Exercise {
   pause: number; // seg
 }
 
-// Agora o Workout armazena apenas os índices dos exercícios
 interface Workout {
   name: string;
   exerciseIds?: number[];
@@ -82,44 +116,18 @@ export default function Treino() {
     "exercises",
     []
   );
-  const [exerciseDialogOpen, setExerciseDialogOpen] = useLocalStorage<boolean>(
-    "exerciseDialogOpen",
-    false
-  );
-  const [editExerciseIndex, setEditExerciseIndex] = useLocalStorage<
-    number | undefined
-  >("editExerciseIndex", undefined);
-  const [exerciseName, setExerciseName] = useLocalStorage<string>(
-    "exerciseName",
-    ""
-  );
-  const [exerciseSeries, setExerciseSeries] = useLocalStorage<number>(
-    "exerciseSeries",
-    3
-  );
-  const [exerciseRepetitions, setExerciseRepetitions] = useLocalStorage<number>(
-    "exerciseRepetitions",
-    10
-  );
-  const [exercisePause, setExercisePause] = useLocalStorage<number>(
-    "exercisePause",
-    60
-  );
+  const [exerciseDialogOpen, setExerciseDialogOpen] = useState(false);
+  const [editExerciseIndex, setEditExerciseIndex] = useState<number | undefined>(undefined);
+  const [exerciseName, setExerciseName] = useState("");
+  const [exerciseSeries, setExerciseSeries] = useState(3);
+  const [exerciseRepetitions, setExerciseRepetitions] = useState(10);
+  const [exercisePause, setExercisePause] = useState(60);
 
   // Treinos
   const [workouts, setWorkouts] = useLocalStorage<Workout[]>("workouts", []);
-  const [workoutDialogOpen, setWorkoutDialogOpen] = useLocalStorage<boolean>(
-    "workoutDialogOpen",
-    false
-  );
-  const [editWorkoutIndex, setEditWorkoutIndex] = useLocalStorage<
-    number | undefined
-  >("editWorkoutIndex", undefined);
-  const [workoutName, setWorkoutName] = useLocalStorage<string>(
-    "workoutName",
-    ""
-  );
-  // selectedExercises agora são apenas os índices
+  const [workoutDialogOpen, setWorkoutDialogOpen] = useState(false);
+  const [editWorkoutIndex, setEditWorkoutIndex] = useState<number | undefined>(undefined);
+  const [workoutName, setWorkoutName] = useState("");
   const [selectedExercises, setSelectedExercises] = useState<number[]>([]);
 
   // Plano Semanal
@@ -142,7 +150,7 @@ export default function Treino() {
     []
   );
 
-  // Mostrar/ocultar “Dias da Semana”
+  // Mostrar/ocultar "Dias da Semana"
   const [showWeeklyTraining, setShowWeeklyTraining] = useState(false);
   const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
 
@@ -160,6 +168,9 @@ export default function Treino() {
 
   // Adicionar estado para exercícios expandidos após os outros estados
   const [expandedExercises, setExpandedExercises] = useState<number[]>([]);
+  
+  // Estado para controlar animações de seções
+  const [activeTab, setActiveTab] = useState<"exercises" | "workouts" | "weekly">("exercises");
 
   /* =============================
      2) FUNÇÕES Exercícios
@@ -324,52 +335,83 @@ export default function Treino() {
   ============================== */
   function renderWeeklyPlan() {
     const days = Object.keys(weeklyPlan) as DayOfWeek[];
+    
     return (
-      <Card className="p-4 space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          🗓️ Plano Semanal
-        </h2>
-        <p className="text-sm text-gray-600">
-          Defina o treino ou “Descanso” para cada dia:
-        </p>
-
-        <div className="space-y-2 mt-2">
-          {days.map((day) => {
-            const assignedWorkout = weeklyPlan[day];
-            return (
-              <Card key={day} className="p-2 bg-white flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-sm w-[130px] break-words">
-                    {day}:
-                  </span>
-                  <span className="text-sm">{assignedWorkout}</span>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                  <Select
-                    onValueChange={(val) =>
-                      setWeeklyPlan({...weeklyPlan, [day]: val})
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {days.map((day) => {
+          const assignedWorkout = weeklyPlan[day];
+          const isRest = assignedWorkout === "Descanso";
+          
+          return (
+            <motion.div
+              key={day}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.3,
+                delay: days.indexOf(day) * 0.05
+              }}
+              className="bg-white rounded-xl border border-gray-100 p-4 hover:border-green-200 transition-all duration-300 hover:shadow-md"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-gray-700">{day}</span>
+                <Badge 
+                  variant="outline" 
+                  className={isRest ? 
+                    "bg-gray-100 text-gray-500" : 
+                    "bg-green-50 text-green-600 border-green-200"}
+                >
+                  {isRest ? "Descanso" : "Treino"}
+                </Badge>
+              </div>
+              
+              <Select
+                value={assignedWorkout}
+                onValueChange={(val) => setWeeklyPlan({...weeklyPlan, [day]: val})}
+              >
+                <SelectTrigger className="w-full text-sm">
+                  <div className="flex items-center gap-2">
+                    {isRest ? 
+                      <Bed size={18} className="text-gray-500" /> : 
+                      <Dumbbell size={18} className="text-green-600" />
                     }
-                    value={assignedWorkout}
-                  >
-                    <SelectTrigger className="w-full sm:w-[160px] text-sm">
-                      <SelectValue placeholder="Selecionar Treino" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* Primeira opção para definir o dia como descanso */}
-                      <SelectItem value="Descanso">Descanso</SelectItem>
-                      {workouts.map((wt, i) => (
-                        <SelectItem key={i} value={wt.name}>
-                          {wt.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Descanso">
+                    <span className="flex items-center gap-2">
+                      <Bed size={16} className="text-gray-500" /> Descanso
+                    </span>
+                  </SelectItem>
+                  {workouts.map((wt, i) => (
+                    <SelectItem key={i} value={wt.name}>
+                      <span className="flex items-center gap-2">
+                        <Dumbbell size={16} className="text-green-600" /> {wt.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {!isRest && (
+                <div className="mt-3 text-xs text-gray-500">
+                  {(() => {
+                    const wt = workouts.find(w => w.name === assignedWorkout);
+                    if (!wt) return "Treino não encontrado";
+                    
+                    let count = 0;
+                    if (wt.exerciseIds) count = wt.exerciseIds.length;
+                    else if (wt.exercises) count = wt.exercises.length;
+                    
+                    return `${count} exercício${count !== 1 ? 's' : ''}`;
+                  })()}
                 </div>
-              </Card>
-            );
-          })}
-        </div>
-      </Card>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
     );
   }
 
@@ -486,9 +528,11 @@ export default function Treino() {
     );
     if (!logEntry) {
       return (
-        <p className="text-sm text-gray-500 italic">
-          Nenhum set registado ainda.
-        </p>
+        <div className="bg-gray-50 p-4 rounded-lg text-center">
+          <p className="text-sm text-gray-500">
+            Nenhum set registado ainda.
+          </p>
+        </div>
       );
     }
 
@@ -497,28 +541,35 @@ export default function Treino() {
     );
     if (!exLog || exLog.sets.length === 0) {
       return (
-        <p className="text-sm text-gray-500 italic">
-          Nenhum set registado ainda.
-        </p>
+        <div className="bg-gray-50 p-4 rounded-lg text-center">
+          <p className="text-sm text-gray-500">
+            Nenhum set registado ainda para {currentExercise.name}.
+          </p>
+        </div>
       );
     }
 
     return (
       <div className="space-y-2 mt-2">
         {exLog.sets.map((s, idx) => (
-          <div
+          <motion.div
             key={idx}
-            className="flex justify-between items-center p-2 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
+            className="flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
           >
             <div className="flex items-center gap-4">
-              <span className="font-medium text-green-700">Set {idx + 1}</span>
-              <div className="flex gap-4 text-sm text-gray-600">
+              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
+                {idx + 1}
+              </span>
+              <div className="flex gap-4 text-sm">
                 <span className="flex items-center gap-1">
-                  <span className="text-xs">🔄</span>
+                  <Repeat size={16} className="text-green-600" />
                   {s.reps} reps
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="text-xs">⚖️</span>
+                  <Weight size={16} className="text-green-600" />
                   {s.weight} kg
                 </span>
               </div>
@@ -535,7 +586,7 @@ export default function Treino() {
             >
               ✏️ Editar
             </Button>
-          </div>
+          </motion.div>
         ))}
       </div>
     );
@@ -555,19 +606,25 @@ export default function Treino() {
       (log) =>
         log.dayOfWeek === selectedDay && log.workoutName === currentWorkoutName
     );
+    
     if (logsOfThisDayAndWorkout.length === 0) {
       return (
-        <p className="text-sm text-gray-500 italic">
-          Nenhum registo para este dia.
-        </p>
+        <div className="bg-gray-50 p-4 rounded-lg text-center">
+          <p className="text-sm text-gray-500">
+            Nenhum registo para este dia.
+          </p>
+        </div>
       );
     }
 
     return logsOfThisDayAndWorkout.map((log, idx) => {
       const isOpen = openLogDates.includes(log.date);
       return (
-        <div
+        <motion.div
           key={idx}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.05 }}
           className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm transition-all duration-300 hover:shadow-md"
         >
           <Button
@@ -592,54 +649,64 @@ export default function Treino() {
               ▼
             </span>
           </Button>
-          {isOpen && (
-            <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-4">
-              {log.exerciseLogs.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  Nenhum exercício registado.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {log.exerciseLogs.map((exLog, exIdx) => (
-                    <div
-                      key={exIdx}
-                      className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
-                    >
-                      <h4 className="font-medium text-green-700 mb-2 flex items-center gap-2">
-                        <span className="text-lg">💪</span>
-                        {exLog.exerciseName}
-                      </h4>
-                      <div className="grid gap-2">
-                        {exLog.sets.map((s, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded-lg"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-700">
-                                Set {sIdx + 1}
-                              </span>
-                            </div>
-                            <div className="flex gap-4">
-                              <span className="text-gray-600 flex items-center gap-1">
-                                <span className="text-xs">🔄</span>
-                                {s.reps} reps
-                              </span>
-                              <span className="text-gray-600 flex items-center gap-1">
-                                <span className="text-xs">⚖️</span>
-                                {s.weight} kg
-                              </span>
-                            </div>
+          
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-4">
+                  {log.exerciseLogs.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">
+                      Nenhum exercício registado.
+                    </p>
+                  ) : (
+                    <div className="space-y-4">
+                      {log.exerciseLogs.map((exLog, exIdx) => (
+                        <div
+                          key={exIdx}
+                          className="bg-white rounded-lg p-3 shadow-sm border border-gray-100"
+                        >
+                          <h4 className="font-medium text-green-700 mb-2 flex items-center gap-2">
+                            <span className="text-lg">💪</span>
+                            {exLog.exerciseName}
+                          </h4>
+                          <div className="grid gap-2">
+                            {exLog.sets.map((s, sIdx) => (
+                              <div
+                                key={sIdx}
+                                className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded-lg"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="font-medium text-gray-700">
+                                    Set {sIdx + 1}
+                                  </span>
+                                </div>
+                                <div className="flex gap-4">
+                                  <span className="text-gray-600 flex items-center gap-1">
+                                    <span className="text-xs">🔄</span>
+                                    {s.reps} reps
+                                  </span>
+                                  <span className="text-gray-600 flex items-center gap-1">
+                                    <span className="text-xs">⚖️</span>
+                                    {s.weight} kg
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       );
     });
   }
@@ -647,305 +714,328 @@ export default function Treino() {
   /* =============================
      6) RENDER FINAL
   ============================== */
-  return (
-    <div className="space-y-8">
-      {/* Seção de Exercícios */}
-      <section>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            <span className="text-green-600">💪</span> Exercícios
-          </h2>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (expandedExercises.length === exercises.length) {
-                  setExpandedExercises([]);
-                } else {
-                  setExpandedExercises(exercises.map((_, i) => i));
-                }
-              }}
-              className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
-            >
-              {expandedExercises.length === exercises.length
-                ? "Minimizar Todos"
-                : "Expandir Todos"}
-            </Button>
-            <Button
-              onClick={() => setExerciseDialogOpen(true)}
-              className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
-            >
-              + Novo Exercício
-            </Button>
-          </div>
-        </div>
+  // Tabs de navegação
+  const renderTabs = () => (
+    <div className="flex space-x-1 p-1 bg-gray-100 rounded-lg mb-6">
+      {[
+        { id: "exercises", label: "Exercícios", icon: <ActivitySquare size={18} className="text-green-600" /> },
+        { id: "workouts", label: "Treinos", icon: <Dumbbell size={18} className="text-blue-600" /> },
+        { id: "weekly", label: "Plano Semanal", icon: <Calendar size={18} className="text-amber-600" /> }
+      ].map((tab) => (
+        <Button 
+          key={tab.id}
+          variant={activeTab === tab.id ? "default" : "ghost"}
+          className={`flex-1 gap-2 ${activeTab === tab.id ? "bg-green-600 text-white" : "text-gray-600 hover:text-green-700"}`}
+          onClick={() => setActiveTab(tab.id as any)}
+        >
+          {tab.icon}
+          <span className="hidden sm:inline">{tab.label}</span>
+        </Button>
+      ))}
+    </div>
+  );
 
-        <div className="grid gap-3">
-          {exercises.length === 0 ? (
-            <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-500">Nenhum exercício cadastrado</p>
+  return (
+    <div className="space-y-6">
+      {/* Tabs de navegação */}
+      {renderTabs()}
+
+      {/* Seção de Exercícios */}
+      <AnimatePresence mode="wait">
+        {activeTab === "exercises" && (
+          <motion.div
+            key="exercises"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <SectionHeader
+              title="Gerenciamento de Exercícios"
+              icon={<ActivitySquare size={20} className="text-green-600" />}
+              description="Cadastre exercícios para construir seus treinos"
+              action={
+                <Button
+                  onClick={() => setExerciseDialogOpen(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white transition-all"
+                >
+                  + Novo Exercício
+                </Button>
+              }
+            />
+
+            <div className="bg-white p-4 rounded-xl border border-gray-100 mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <StatCard
+                  icon={<ActivitySquare size={18} className="text-amber-600" />}
+                  label="Total"
+                  value={exercises.length}
+                  unit="exercícios"
+                  size="sm"
+                  color="amber"
+                />
+              </div>
+              
               <Button
-                onClick={() => setExerciseDialogOpen(true)}
-                className="mt-3 bg-green-50 text-green-600 hover:bg-green-100"
+                variant="outline"
+                onClick={() => {
+                  if (expandedExercises.length === exercises.length) {
+                    setExpandedExercises([]);
+                  } else {
+                    setExpandedExercises(exercises.map((_, i) => i));
+                  }
+                }}
+                className="text-green-600 border-green-200 hover:bg-green-50"
               >
-                Adicionar Primeiro Exercício
+                {expandedExercises.length === exercises.length
+                  ? "Minimizar Todos"
+                  : "Expandir Todos"}
               </Button>
             </div>
-          ) : (
-            exercises.map((ex, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl border border-gray-100 hover:border-green-200 transition-all duration-300"
-              >
-                <div
-                  className="p-4 flex items-center justify-between cursor-pointer"
-                  onClick={() => {
-                    if (expandedExercises.includes(i)) {
-                      setExpandedExercises(
-                        expandedExercises.filter((idx) => idx !== i)
-                      );
-                    } else {
-                      setExpandedExercises([...expandedExercises, i]);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
-                      <span className="text-green-600 text-lg">💪</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-800">{ex.name}</h3>
-                      {!expandedExercises.includes(i) && (
-                        <div className="flex gap-4 mt-1 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <span className="text-green-600 text-xs">🔄</span>
-                            {ex.series} séries
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span className="text-green-600 text-xs">🎯</span>
-                            {ex.repetitions} reps
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <span className="text-gray-400 mr-2">
-                      {expandedExercises.includes(i) ? "▼" : "▶"}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-green-600 hover:bg-green-50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditExerciseClick(i);
-                      }}
-                    >
-                      ✏️
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteExercise(i);
-                      }}
-                    >
-                      🗑️
-                    </Button>
-                  </div>
+
+            <div className="grid gap-3">
+              {exercises.length === 0 ? (
+                <div className="bg-gray-50 rounded-xl p-8 text-center">
+                  <ActivitySquare size={48} className="text-green-600 mb-3 mx-auto" />
+                  <p className="text-gray-600 font-medium mb-3">Nenhum exercício cadastrado</p>
+                  <Button
+                    onClick={() => setExerciseDialogOpen(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Adicionar Primeiro Exercício
+                  </Button>
                 </div>
-                {expandedExercises.includes(i) && (
-                  <div className="px-4 pb-4 pt-2 border-t border-gray-100">
+              ) : (
+                exercises.map((ex, i) => (
+                  <ExpandableCard
+                    key={i}
+                    title={ex.name}
+                    icon="💪"
+                    defaultExpanded={expandedExercises.includes(i)}
+                    actions={
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-green-600 hover:bg-green-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditExerciseClick(i);
+                          }}
+                        >
+                          ✏️
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteExercise(i);
+                          }}
+                        >
+                          🗑️
+                        </Button>
+                      </>
+                    }
+                  >
                     <div className="grid gap-4">
-                      <div className="flex gap-4 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-600 text-xs">🔄</span>
+                      <div className="flex flex-wrap gap-4 text-sm">
+                        <span className="flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full">
+                          <Repeat size={16} className="text-green-600" />
                           {ex.series} séries
                         </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-600 text-xs">🎯</span>
-                          {ex.repetitions} reps
+                        <span className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full">
+                          <Target size={16} className="text-amber-600" />
+                          {ex.repetitions} repetições
                         </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-600 text-xs">⏱️</span>
+                        <span className="flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full">
+                          <Timer size={16} className="text-blue-600" />
                           {ex.pause}s pausa
                         </span>
                       </div>
                     </div>
+                  </ExpandableCard>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+        
+        {/* Seção de Treinos */}
+        {activeTab === "workouts" && (
+          <motion.div
+            key="workouts"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <SectionHeader
+              title="Composição de Treinos"
+              icon={<Dumbbell size={20} className="text-blue-600" />}
+              description="Crie treinos combinando exercícios"
+              action={
+                <Button
+                  onClick={() => setWorkoutDialogOpen(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white transition-all"
+                  disabled={exercises.length === 0}
+                >
+                  + Novo Treino
+                </Button>
+              }
+            />
+
+            {exercises.length === 0 ? (
+              <Card className="p-6 text-center">
+                <p className="text-gray-600 mb-3">
+                  Você precisa cadastrar exercícios antes de criar treinos.
+                </p>
+                <Button
+                  onClick={() => setActiveTab("exercises")}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Ir para Exercícios
+                </Button>
+              </Card>
+            ) : (
+              <div className="grid gap-3">
+                {workouts.length === 0 ? (
+                  <div className="bg-gray-50 rounded-xl p-8 text-center">
+                    <span className="text-4xl mb-3 block">🏋️</span>
+                    <p className="text-gray-600 font-medium mb-3">Nenhum treino cadastrado</p>
+                    <Button
+                      onClick={() => setWorkoutDialogOpen(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Criar Primeiro Treino
+                    </Button>
                   </div>
+                ) : (
+                  workouts.map((wt, i) => (
+                    <ExpandableCard
+                      key={i}
+                      title={wt.name}
+                      icon="🏋️"
+                      defaultExpanded={true}
+                      actions={
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-green-600 hover:bg-green-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditWorkoutClick(i);
+                            }}
+                          >
+                            ✏️
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteWorkout(i);
+                            }}
+                          >
+                            🗑️
+                          </Button>
+                        </>
+                      }
+                    >
+                      <div className="space-y-2">
+                        {wt.exerciseIds
+                          ? wt.exerciseIds.map((exId, j) => {
+                              const ex = exercises[exId];
+                              if (!ex) return null;
+                              return (
+                                <motion.div
+                                  key={j}
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: j * 0.05 }}
+                                  className="bg-gray-50 rounded-lg p-3 flex justify-between items-center"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <span className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
+                                      {j+1}
+                                    </span>
+                                    <span className="text-gray-700">{ex.name}</span>
+                                  </div>
+                                  <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-100">
+                                    {ex.series}x{ex.repetitions}
+                                  </span>
+                                </motion.div>
+                              );
+                            })
+                          : wt.exercises?.map((ex, j) => (
+                              <motion.div
+                                key={j}
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: j * 0.05 }}
+                                className="bg-gray-50 rounded-lg p-3 flex justify-between items-center"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
+                                    {j+1}
+                                  </span>
+                                  <span className="text-gray-700">{ex.name}</span>
+                                </div>
+                                <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-100">
+                                  {ex.series}x{ex.repetitions}
+                                </span>
+                              </motion.div>
+                            ))}
+                      </div>
+                    </ExpandableCard>
+                  ))
                 )}
               </div>
-            ))
-          )}
-        </div>
-      </section>
+            )}
+          </motion.div>
+        )}
 
-      {/* Seção de Treinos */}
-      <section>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            <span className="text-green-600">🏋️</span> Treinos
-          </h2>
-          <Button
-            onClick={() => setWorkoutDialogOpen(true)}
-            className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200"
+        {/* Seção do Plano Semanal */}
+        {activeTab === "weekly" && (
+          <motion.div
+            key="weekly"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            + Novo Treino
-          </Button>
-        </div>
+            <SectionHeader
+              title="Plano Semanal de Treinos"
+              icon={<Calendar size={20} className="text-amber-600" />}
+              description="Organize seus treinos ao longo da semana"
+            />
 
-        <div className="grid gap-3">
-          {workouts.length === 0 ? (
-            <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <p className="text-gray-500">Nenhum treino cadastrado</p>
-              <Button
-                onClick={() => setWorkoutDialogOpen(true)}
-                className="mt-3 bg-green-50 text-green-600 hover:bg-green-100"
-              >
-                Criar Primeiro Treino
-              </Button>
-            </div>
-          ) : (
-            workouts.map((wt, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl border border-gray-100 hover:border-green-200 transition-all duration-300"
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
-                        <span className="text-green-600 text-lg">🏋️</span>
-                      </div>
-                      <h3 className="font-medium text-gray-800">{wt.name}</h3>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-green-600 hover:bg-green-50"
-                        onClick={() => handleEditWorkoutClick(i)}
-                      >
-                        ✏️
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => handleDeleteWorkout(i)}
-                      >
-                        🗑️
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="ml-14 grid gap-2">
-                    {wt.exerciseIds
-                      ? wt.exerciseIds.map((exId, j) => {
-                          const ex = exercises[exId];
-                          if (!ex) return null;
-                          return (
-                            <div
-                              key={j}
-                              className="bg-gray-50 rounded-lg p-2 text-sm flex justify-between items-center"
-                            >
-                              <span className="text-gray-600">{ex.name}</span>
-                              <span className="text-xs text-gray-500">
-                                {ex.series}x{ex.repetitions}
-                              </span>
-                            </div>
-                          );
-                        })
-                      : wt.exercises?.map((ex, j) => (
-                          <div
-                            key={j}
-                            className="bg-gray-50 rounded-lg p-2 text-sm flex justify-between items-center"
-                          >
-                            <span className="text-gray-600">{ex.name}</span>
-                            <span className="text-xs text-gray-500">
-                              {ex.series}x{ex.repetitions}
-                            </span>
-                          </div>
-                        ))}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
-
-      {/* Seção do Plano Semanal */}
-      <section>
-        <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2 mb-4">
-          <span className="text-green-600">📅</span> Plano Semanal
-        </h2>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {Object.entries(weeklyPlan).map(([day, workout]) => {
-            const isRest = workout === "Descanso";
-            return (
-              <div
-                key={day}
-                className="bg-white rounded-xl border border-gray-100 p-4 hover:border-green-200 transition-all duration-300"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-gray-600">{day}</span>
-                  <Select
-                    value={workout}
-                    onValueChange={(val) =>
-                      setWeeklyPlan({...weeklyPlan, [day]: val})
-                    }
-                  >
-                    <SelectTrigger className="w-[140px] text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Descanso">
-                        <span className="flex items-center gap-2">
-                          <span>😴</span> Descanso
-                        </span>
-                      </SelectItem>
-                      {workouts.map((wt, i) => (
-                        <SelectItem key={i} value={wt.name}>
-                          <span className="flex items-center gap-2">
-                            <span>🏋️</span> {wt.name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div
-                  className={`text-sm ${
-                    isRest ? "text-gray-400" : "text-gray-600"
-                  }`}
+            {workouts.length === 0 ? (
+              <Card className="p-6 text-center">
+                <p className="text-gray-600 mb-3">
+                  Você precisa criar treinos antes de montar seu plano semanal.
+                </p>
+                <Button
+                  onClick={() => setActiveTab("workouts")}
+                  className="bg-green-600 hover:bg-green-700 text-white"
                 >
-                  {isRest ? (
-                    <span className="flex items-center gap-2">
-                      <span>😴</span> Dia de Descanso
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <span>🏋️</span> {workout}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                  Ir para Treinos
+                </Button>
+              </Card>
+            ) : renderWeeklyPlan()}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Dialog de Exercício */}
       <Dialog open={exerciseDialogOpen} onOpenChange={setExerciseDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">💪</span>
+              <ActivitySquare size={20} className="text-green-600" />
               {editExerciseIndex !== undefined ? "Editar" : "Novo"} Exercício
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -1075,7 +1165,7 @@ export default function Treino() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">🏋️</span>
+              <Dumbbell size={20} className="text-green-600" />
               {editWorkoutIndex !== undefined ? "Editar" : "Novo"} Treino
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -1105,15 +1195,15 @@ export default function Treino() {
 
             {/* Seleção de Exercícios */}
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
-              <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <span className="text-green-600">💪</span> Exercícios do Treino
-                <span className="ml-auto text-xs text-gray-500">
-                  {selectedExercises.length} selecionados
-                </span>
+              <h3 className="font-medium text-gray-700 flex items-center gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">💪</span> Exercícios do Treino
+                </div>
+                <Badge className="bg-green-600">{selectedExercises.length} selecionados</Badge>
               </h3>
 
               <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200">
-                <div className="max-h-[300px] overflow-y-auto p-3 space-y-2">
+                <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-3 space-y-2">
                   {exercises.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-sm text-gray-500">

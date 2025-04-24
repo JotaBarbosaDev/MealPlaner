@@ -1,353 +1,404 @@
-# 🏋️‍♂️ MealPlaner - Gestão de Treinos & Dieta
+# <div align="center">🏋️‍♂️ MealPlaner</div>
 
-Uma aplicação web para gerir os seus treinos e plano alimentar. Desenvolvida com React, Tailwind CSS e shadcn/ui, oferecendo uma experiência fluida tanto em computador como em telemóvel.
+<div align="center">
+  <h3>✨ Gestão de Treinos & Dieta para o Atleta Moderno ✨</h3>
+</div>
 
-![Estado](https://img.shields.io/badge/estado-em%20desenvolvimento-green)
-![Versão](https://img.shields.io/badge/versão-1.0.0-blue)
-![Telemóvel](https://img.shields.io/badge/telemóvel-pronto-success)
+<div align="center">
+  <img src="https://img.shields.io/badge/estado-em%20desenvolvimento-green" alt="Estado" />
+  <img src="https://img.shields.io/badge/versão-1.0.0-blue" alt="Versão" />
+  <img src="https://img.shields.io/badge/telemóvel-pronto-success" alt="Telemóvel" />
+  <img src="https://img.shields.io/badge/tecnologia-React%2019%20+%20Next.js%2015-61DAFB" alt="Tecnologia" />
+</div>
+
+<br/>
+
+<div align="center">
+  Uma aplicação web moderna para gerir treinos e nutrição de forma científica e intuitiva.
+  <br/>
+  Desenvolvida com React 19, Next.js 15, Tailwind CSS e shadcn/ui para uma experiência fluida em qualquer dispositivo.
+</div>
+
+<br/>
 
 ## 📱 Compatibilidade
 
-- ✅ Computador (Windows, macOS, Linux)
-- ✅ Telemóvel (Android, iOS)
-- ✅ Tablets
-- ✅ PWA (em breve)
+| Plataforma | Estado | Notas |
+|------------|:------:|-------|
+| 💻 Windows/macOS/Linux | ✅ | Experiência completa com layout otimizado |
+| 📱 Android/iOS | ✅ | Interface adaptativa para telas menores |
+| 📱 Tablets | ✅ | Layout híbrido com todas as funcionalidades |
+| 🌐 PWA | 🔜 | Instalação como app nativa em breve |
 
-## 🌟 Funcionalidades
+<br/>
 
-### 💪 Treinos
+## ✨ Principais Recursos
 
-- **Gestão de Exercícios**
+<table>
+  <tr>
+    <td width="33%">
+      <h3 align="center">💪 Treinos</h3>
+      <ul>
+        <li>🏃‍♂️ Gestão completa de exercícios</li>
+        <li>📝 Planos de treino personalizados</li>
+        <li>📊 Acompanhamento de progressão</li>
+        <li>🗓️ Organização semanal inteligente</li>
+      </ul>
+    </td>
+    <td width="33%">
+      <h3 align="center">🥗 Nutrição</h3>
+      <ul>
+        <li>🍎 Biblioteca de alimentos detalhada</li>
+        <li>🍱 Criação de refeições personalizadas</li>
+        <li>📈 Monitorização de macronutrientes</li>
+        <li>🎯 Metas adaptativas por fase</li>
+      </ul>
+    </td>
+    <td width="33%">
+      <h3 align="center">⚖️ Monitorização</h3>
+      <ul>
+        <li>📏 Acompanhamento de métricas corporais</li>
+        <li>📊 Visualização em gráficos</li>
+        <li>📜 Histórico completo</li>
+        <li>📉 Análises de tendências</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-  - Criar, editar e remover exercícios
-  - Definir séries, repetições e tempo de pausa
-  - Visualização expandida/minimizada dos detalhes
-  - Interface intuitiva com ícones e feedback visual
+<br/>
 
-- **Planos de Treino**
+## 🚀 Comece Já
 
-  - Criar treinos personalizados (ex: Treino A - Peito e Tríceps)
-  - Selecionar exercícios para cada treino
-  - Organizar treinos por dia da semana
-  - Visualização clara do plano semanal
+### Acesse a Aplicação
 
-- **Registo de Progresso**
-  - Registar séries e pesos para cada exercício
-  - Histórico de treinos por data
-  - Acompanhamento da evolução
-  - Comparação com treinos anteriores
+```
+🔗 URL: mealplaner.marquesserver.freeddns.org:7171
+⏰ Disponibilidade: 07:00-00:00 (GMT+1)
+```
 
-### 🥗 Dieta
+> O servidor está offline entre as 00:00 e as 07:00 para otimização energética
 
-- **Gestão de Produtos**
+<br/>
 
-  - Registo detalhado de alimentos
-  - Informação nutricional por 100g
-  - Calorias, proteínas, hidratos de carbono e gorduras
-  - Edição e remoção de produtos
+## 🛠️ Stack Tecnológica
 
-- **Planos de Refeição**
+```mermaid
+graph TD
+    A[MealPlaner] --> B[Frontend]
+    A --> C[Dados]
+    A --> D[UI/UX]
+    
+    B --> B1[React 19]
+    B --> B2[TypeScript 5]
+    B --> B3[Next.js 15]
+    
+    C --> C1[LocalStorage]
+    C --> C2[PostgreSQL em breve]
+    
+    D --> D1[Tailwind CSS]
+    D --> D2[shadcn/ui]
+    D --> D3[Framer Motion]
+    D --> D4[Design Responsivo]
+```
 
-  - Criar e personalizar refeições
-  - Adicionar produtos com quantidades específicas
-  - Cálculo automático de macronutrientes
-  - Distribuição por refeição (pequeno-almoço, almoço, etc.)
+<br/>
 
-- **Metas Nutricionais**
-  - Definir objetivos calóricos
-  - Distribuição de macronutrientes
-  - Acompanhamento diário
-  - Visualização do progresso
-
-### ⚖️ Pesagens
-
-- Registo de medidas corporais
-- Acompanhamento do peso
-- Percentagem de gordura e massa muscular
-- Histórico e gráficos de evolução
-
-## 🚀 Como Começar
-
-### 🌐 Acesso à Aplicação
-
-- URL: [http://mealplaner.marquesserver.freeddns.org:7171/](http://mealplaner.marquesserver.freeddns.org:7171/)
-- Horário do Servidor: 07:00 - 00:00 (GMT+1)
-  > Nota: O servidor está desligado entre as 00:00 e as 07:00 para otimização energética.
-
-### 📋 Guia de Utilização Detalhado
-
-#### 🥗 Gestão da Dieta
-
-1. **Configurar Metas Nutricionais**
-
-   - Aceda ao separador "Dieta"
-   - Em "Gerir Metas":
-     - Introduza a sua meta calórica diária
-     - Personalize a distribuição por refeição (ex: pequeno-almoço 25%, almoço 35%, etc.)
-     - Ajuste as percentagens de macronutrientes (proteínas, hidratos, gorduras)
-       > Nota: As percentagens são totalmente personalizáveis de acordo com as suas preferências
-
-2. **Criar Base de Produtos**
-
-   - Em "Gerir Produtos":
-     - Adicione produtos com informação nutricional por 100g
-     - Inclua calorias, proteínas, hidratos e gorduras
-     - Edite ou remova produtos conforme necessário
-
-3. **Criar Pratos**
-
-   - Em "Gerir Pratos":
-     - Combine produtos com gramagens específicas
-     - O sistema calcula automaticamente os valores nutricionais
-     - Crie vários pratos para cada tipo de refeição
-
-4. **Gerir Refeições**
-   - Em "Gerir Refeições":
-     - Adicione pratos às suas refeições
-     - Cada refeição pode ter múltiplos pratos disponíveis
-     - Escolha um prato por refeição diariamente
-       > Importante: Independentemente do prato escolhido, o total calórico diário mantém-se de acordo com as suas metas
-
-#### 💪 Gestão de Treinos
-
-1. **Configurar Exercícios**
-
-   - No separador "Treino":
-     - Adicione novos exercícios
-     - Defina séries, repetições e tempo de pausa
-     - Organize por grupos musculares
-
-2. **Criar Planos de Treino**
-
-   - Em "Gerir Treinos":
-     - Crie treinos específicos (ex: Treino A - Peito)
-     - Selecione exercícios para cada treino
-     - Defina a ordem dos exercícios
-
-3. **Organizar Semana**
-
-   - Atribua treinos aos dias da semana
-   - Os dias sem treino são automaticamente definidos como descanso
-   - Possibilidade de múltiplos treinos por dia
-
-4. **Registar Progresso**
-   - Na página inicial:
-     - Registe os sets de cada treino
-     - Acompanhe o peso e repetições
-     - Visualize o histórico de progressão
-       > Dica: Registe sempre os seus sets para um melhor controlo da progressão de carga
-
-#### ⚖️ Gestão de Peso
-
-- Registe pesagens regularmente
-- Acompanhe medidas corporais
-- Visualize gráficos de progresso
-
-### 💡 Dicas de Utilização
-
-- Configure primeiro as suas metas antes de criar pratos
-- Mantenha uma biblioteca variada de produtos e pratos
-- Registe os treinos logo após a sua conclusão
-- Faça pesagens sempre nas mesmas condições para maior precisão
-
-## 💾 Armazenamento
-
-Atualmente, todos os dados são guardados localmente no seu dispositivo (localStorage). Em breve, será implementada uma base de dados PostgreSQL para:
-
-- ☁️ Sincronização entre dispositivos
-- 🔒 Cópia de segurança dos dados
-- 👥 Perfis de utilizador
-- 📊 Análises avançadas
-
-## 🎨 Interface
-
-- Design moderno e minimalista
-- Cores suaves e agradáveis
-- Ícones intuitivos
-- Feedback visual em todas as ações
-- Animações suaves
-- Modo claro/escuro (em breve)
-
-## 🛠️ Tecnologias
-
-- ⚛️ React
-- 🎨 Tailwind CSS
-- 🎯 shadcn/ui
-- 📱 Design Responsivo
-- 🔄 LocalStorage (temporário)
-- 🐘 PostgreSQL (em breve)
-
-## 🧮 Funcionamento dos Algoritmos
-
-### 🥗 Sistema de Dieta
-
-O sistema de dieta foi desenvolvido para oferecer máxima flexibilidade e precisão no controlo nutricional:
-
-#### 📊 Cálculo de Macronutrientes
-
-- **Base de Cálculo**: Todos os valores nutricionais são calculados por 100g de produto
-- **Fórmula de Proporção**: `valor_final = (gramas_utilizadas * valor_por_100g) / 100`
-- **Precisão**: Valores arredondados a 1 casa decimal para maior exatidão
-
-#### 🎯 Sistema de Metas
-
-1. **Distribuição Calórica Personalizada**
-
-   - Definição flexível de calorias diárias totais
-   - Objetivos personalizáveis para diferentes fases:
-     ```
-     Cutting (Perda de Peso)
-     Bulking (Ganho de Massa)
-     Manutenção
-     ```
-   - Distribuição percentual personalizável por refeição
-   - Ajuste livre das percentagens de acordo com as preferências e rotina do utilizador
-   - Exemplo de distribuição (totalmente configurável):
-     ```
-     Pequeno-Almoço: 25%
-     Almoço: 35%
-     Lanche: 15%
-     Jantar: 25%
-     ```
-
-2. **Distribuição de Macronutrientes Flexível**
-
-   - Percentagens ajustáveis para cada macronutriente:
-     - Proteínas
-     - Hidratos de Carbono
-     - Gorduras
-   - Cálculo automático baseado nas preferências do utilizador
-   - Adaptável a diferentes estratégias nutricionais:
-     - Baixo em Hidratos
-     - Alto em Proteína
-     - Equilibrado
-     - Personalizado
-
-3. **Validação de Macros**
-
-   - Verificação automática se os pratos atingem as metas
-   - Alertas visuais quando há discrepância
-   - Sugestões de ajuste baseadas nos desvios
-
-4. **Sistema de Pratos**
-   - Cada prato é uma combinação de produtos com gramagens específicas
-   - Cálculo automático dos totais:
-     ```typescript
-     totalCalorias = Σ((produto.calorias * produto.gramas) / 100);
-     totalProteinas = Σ((produto.proteinas * produto.gramas) / 100);
-     totalHidratos = Σ((produto.hidratos * produto.gramas) / 100);
-     totalGorduras = Σ((produto.gorduras * produto.gramas) / 100);
-     ```
+## 📊 Funcionalidades em Detalhe
 
 ### 💪 Sistema de Treino
 
-O sistema de treino foi projetado para maximizar o acompanhamento e progressão:
+<details>
+<summary><b>🏋️‍♂️ Gestão de Exercícios</b> (clique para expandir)</summary>
+<br/>
 
-#### 📈 Progressão de Treino
+- **🗂️ Biblioteca Completa:**
+  - Criar, editar e remover exercícios personalizados
+  - Definir séries, repetições e tempo de descanso
+  - Organização por grupos musculares
+  
+- **👀 Visualização Interativa:**
+  - Modo expandido/minimizado para detalhes
+  - Feedback visual de progresso
+  - Interface otimizada para uso durante o treino
 
-1. **Registo de Séries**
+</details>
 
-   - Armazenamento de cada série com:
-     ```typescript
-     interface Serie {
-       repeticoes: number;
-       peso: number;
-       data: string;
-     }
-     ```
-   - Histórico completo por exercício
-   - Comparação com treinos anteriores
+<details>
+<summary><b>📋 Planos de Treino</b> (clique para expandir)</summary>
+<br/>
 
-2. **Organização Semanal**
+- **📅 Organização Personalizada:**
+  - Criar treinos específicos (ex: Peito e Tríceps)
+  - Organização semanal flexível
+  - Alternância automática de rotinas
 
-   - Sistema flexível de planeamento
-   - Possibilidade de múltiplos treinos por dia
-   - Rotação automática do plano semanal
+- **📝 Registo de Performance:**
+  - Histórico detalhado por exercício
+  - Acompanhamento de evolução de cargas
+  - Comparação entre sessões
+  
+```typescript
+// Exemplo de estrutura de dados
+interface TreinoSemanal {
+  segunda: Treino[];
+  terca: Treino[];
+  quarta: Treino[];
+  quinta: Treino[];
+  sexta: Treino[];
+  sabado: Treino[];
+  domingo: Treino[];
+}
+```
 
-3. **Validação de Volume**
-   - Cálculo de volume total: `volume = series * repeticoes * peso`
-   - Acompanhamento de progressão semanal
-   - Alertas de sobrecarga ou estagnação
+</details>
 
-#### 🔄 Sistema de Progressão
+### 🥗 Sistema de Nutrição
 
-1. **Análise de Desempenho**
+<details>
+<summary><b>🍎 Gestão de Alimentos</b> (clique para expandir)</summary>
+<br/>
 
-   ```typescript
-   interface Progresso {
-     volumeAnterior: number;
-     volumeAtual: number;
-     variacaoPercentual: number;
-   }
-   ```
+- **🏪 Base de Dados Nutricional:**
+  - Alimentos com informação por 100g
+  - Macronutrientes detalhados (proteínas, carboidratos, gorduras)
+  - Personalização completa com interface intuitiva
+  
+- **🍱 Composição de Pratos:**
+  - Combine alimentos com quantidades específicas
+  - Cálculo automático de valores nutricionais
+  - Biblioteca de pratos reutilizáveis
+  - Validação inteligente de macronutrientes
 
-2. **Métricas de Evolução**
-   - Comparação automática com últimas sessões
-   - Cálculo de tendências de progressão
-   - Sugestões de ajuste de carga
+- **🧮 Cálculo Avançado:**
+  - Verificação automática de discrepâncias de macros
+  - Alertas visuais para desequilíbrios
+  - Distribuição percentual por refeição
 
-### 📱 Sincronização Local
+</details>
 
-1. **Sistema de Cache**
+<details>
+<summary><b>🎯 Sistema de Metas</b> (clique para expandir)</summary>
+<br/>
 
-   - Armazenamento eficiente em localStorage
-   - Estrutura de dados otimizada:
-     ```typescript
-     interface DadosCache {
-       versao: string;
-       ultimaAtualizacao: string;
-       dados: {
-         treinos: Treino[];
-         dieta: PlanoDieta;
-         progresso: Progresso[];
-       };
-     }
-     ```
+- **🔍 Objetivos Personalizados:**
+  - Definição de calorias diárias
+  - Distribuição percentual por macronutriente
+  - Distribuição por refeição (pequeno-almoço, almoço, lanche, jantar)
+  - Adaptação a diferentes fases (corte, volume, manutenção)
 
-2. **Gestão de Dados**
-   - Compressão automática de histórico antigo
-   - Cópia de segurança automática a cada modificação
-   - Sistema de recuperação em caso de erro
+- **📊 Monitorização em Tempo Real:**
+  - Dashboard de consumo diário
+  - Alertas de desvio de metas
+  - Sugestões adaptativas
+  - Feedback visual colorido por faixa de adequação
 
-### 🔐 Validações e Segurança
+- **🔄 Sistema de Sequência:**
+  - Acompanhamento de dias consecutivos de adesão à dieta
+  - Recompensas visuais por consistência
+  - Histórico de aderência ao plano
 
-1. **Validação de Dados**
+</details>
 
-   - Verificação de valores impossíveis/irreais
-   - Prevenção de erros de introdução
-   - Sanitização de dados
+### ⚖️ Acompanhamento de Progresso
 
-2. **Proteção de Dados**
-   - Encriptação básica no localStorage
-   - Verificação de integridade
-   - Sistema de cópia de segurança automática
+<details>
+<summary><b>📏 Métricas Corporais</b> (clique para expandir)</summary>
+<br/>
 
-## 🔜 Próximas Funcionalidades
+- **📝 Registo Completo:**
+  - Peso corporal
+  - Percentual de gordura
+  - Massa muscular (kg e %)
+  - Água corporal (%)
+  - Gordura visceral
+  - Medidas específicas
+  
+- **📈 Análise de Tendências:**
+  - Visualização gráfica de evolução
+  - Correlação com dieta e treino
+  - Cálculo automático de IMC com categorização
+  - Comparação com medições anteriores
 
-- [ ] Base de dados PostgreSQL
-- [ ] Autenticação de utilizadores
-- [ ] Modo escuro
-- [ ] Versão PWA
-- [ ] Gráficos de progresso
-- [ ] Exportação de dados
-- [ ] Partilha de planos
-- [ ] Notificações
+- **💾 Armazenamento:**
+  - Sincronização automática com localStorage
+  - Persistência entre sessões
+  - Backup e restauração (em breve)
+  
+</details>
 
-## 📝 Notas
+<br/>
 
-- A aplicação está em constante desenvolvimento
-- Opiniões e sugestões são bem-vindas
-- Dados são guardados apenas localmente por enquanto
-- Faça cópias de segurança regulares dos seus dados
+## 🏠 Interface Principal
+
+O dashboard principal apresenta um resumo de todas as áreas:
+
+- **🔍 Visão Geral:** Métricas-chave, metas diárias, próximos treinos
+- **📅 Streaks:** Sistema de sequências para treino e dieta
+- **💪 Treino do Dia:** Rápido acesso ao treino programado
+- **🥗 Metas Nutricionais:** Distribuição visual de macros
+- **⚖️ Evolução Corporal:** Últimas medições e tendências
+- **💡 Dica do Dia:** Conselhos diários para motivação
+
+<br/>
+
+## 🔧 Arquitetura & Implementação
+
+- **📱 Design Responsivo:** Interface adaptada para qualquer dispositivo
+- **🧩 Componentização:** Estrutura modular para fácil manutenção
+- **📦 Estado Local:** Gerenciamento de estado com useLocalStorage para persistência
+- **🎨 UI Moderna:** Uso de shadcn/ui e Tailwind para consistência visual
+- **🔄 Animações:** Transições suaves com Framer Motion
+- **📣 Notificações:** Sistema de toasts para feedback ao usuário
+
+<br/>
+
+## 🛡️ Segurança e Armazenamento
+
+Atualmente, os dados são armazenados localmente (localStorage) com:
+
+- ✅ Criptografia básica para proteção
+- ✅ Verificação de integridade
+- ✅ Sistema de recuperação
+
+**Em Breve:**
+- ☁️ Sincronização na nuvem
+- 🔐 Autenticação de utilizadores
+- 📊 Análises avançadas
+
+<br/>
+
+## 🔮 Roadmap
+
+| Funcionalidade | Prioridade | Estado |
+|----------------|:----------:|:------:|
+| 🗃️ Base de dados PostgreSQL | 🔥 Alta | 🔜 Em breve |
+| 🔐 Autenticação de usuários | 🔥 Alta | 🔜 Em breve |
+| 🌙 Modo escuro | 🔄 Média | 🔜 Em breve |
+| 📱 Versão PWA | 🔄 Média | 🔄 Em desenvolvimento |
+| 📊 Gráficos avançados | 🔄 Média | 📝 Planeado |
+| 📥 Exportação de dados | 🔄 Média | 📝 Planeado |
+| 🔄 Sistema de backup/restore | 🔄 Média | 📝 Planeado |
+| 🤝 Partilha de planos | 💤 Baixa | 📝 Planeado |
+| 🔔 Notificações | 💤 Baixa | 📝 Planeado |
+
+<br/>
 
 ## 🤝 Contribuições
 
-Contribuições são bem-vindas! Sinta-se à vontade para:
+Contribuições são bem-vindas! Siga estes passos para contribuir com o projeto:
 
-- 🐛 Reportar problemas
-- 💡 Sugerir novas funcionalidades
-- 🔧 Submeter alterações
+### Como contribuir
 
-## 📜 Licença
+1. **🍴 Fork o repositório:**
+   - Clique no botão "Fork" no canto superior direito do repositório no GitHub
+
+2. **📥 Clone seu fork:**
+   ```bash
+   git clone https://github.com/seu-usuario/MealPlaner.git
+   cd MealPlaner
+   ```
+
+3. **🔄 Configure o repositório upstream:**
+   ```bash
+   git remote add upstream https://github.com/usuario-original/MealPlaner.git
+   ```
+
+4. **🌿 Crie uma branch para sua contribuição:**
+   ```bash
+   git checkout -b minha-contribuicao
+   ```
+
+5. **✏️ Faça suas alterações:**
+   - Implemente novas funcionalidades ou correções
+   - Siga o estilo de código existente
+   - Adicione testes se possível
+
+6. **📤 Commit e push das alterações:**
+   ```bash
+   git add .
+   git commit -m "Descrição clara da sua contribuição"
+   git push origin minha-contribuicao
+   ```
+
+7. **🚀 Abra um Pull Request:**
+   - Vá para o repositório original
+   - Clique em "New Pull Request"
+   - Selecione "compare across forks"
+   - Selecione seu fork e a branch com suas alterações
+   - Descreva detalhadamente suas alterações
+
+### Diretrizes para contribuição
+
+- 🧹 Mantenha o código limpo e bem documentado
+- 📐 Siga os padrões de código do projeto
+- 🧪 Teste suas alterações antes de enviar
+- 🔍 Uma contribuição por Pull Request
+- 🤝 Seja respeitoso nas discussões
+
+### Reportando problemas
+
+Para reportar bugs ou solicitar novas funcionalidades:
+
+1. 🔍 Verifique se já não existe uma issue similar
+2. 📝 Use o template de issue apropriado
+3. 📋 Forneça detalhes claros sobre o problema
+4. 🔄 Inclua passos para reproduzir, se for um bug
+5. 📸 Adicione capturas de tela se necessário
+
+### Como executar o projeto localmente
+
+Para desenvolvedores que desejam executar o MealPlaner localmente:
+
+1. **📋 Pré-requisitos:**
+   - Node.js (versão recomendada: 18.x ou superior)
+   - npm ou yarn
+
+2. **📦 Instale as dependências:**
+   ```bash
+   npm install
+   # ou
+   yarn install
+   ```
+
+3. **🚀 Execute em modo desenvolvimento:**
+   ```bash
+   npm run dev
+   # ou
+   yarn dev
+   ```
+   Isso iniciará o servidor de desenvolvimento. Acesse `http://localhost:3000` no seu navegador.
+
+4. **🛠️ Outros comandos úteis:**
+   ```bash
+   # Construir para produção
+   npm run build
+   # ou
+   yarn build
+
+   # Iniciar versão de produção
+   npm run start
+   # ou
+   yarn start
+
+   # Executar linter
+   npm run lint
+   # ou
+   yarn lint
+   ```
+
+<br/>
+
+## 📄 Licença
 
 Este projeto está licenciado sob a [Licença MIT](LICENSE).
+
+---
+
+<div align="center">
+  <sub>Desenvolvido com ❤️ para atletas de todos os níveis</sub>
+  <br/><br/>
+  <a href="http://mealplaner.marquesserver.freeddns.org:7171/">
+    <img src="https://img.shields.io/badge/Visite%20MealPlaner-4285F4?style=for-the-badge" alt="Visite MealPlaner" />
+  </a>
+</div>

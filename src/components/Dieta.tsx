@@ -3,6 +3,25 @@
 import React, {FormEvent, useState} from "react";
 import useLocalStorage from "use-local-storage";
 import {toast} from "react-toastify";
+import { 
+  Settings, 
+  Salad, 
+  Target, 
+  BarChart3, 
+  Pizza, 
+  Flame, 
+  Apple, 
+  Beef, 
+  Cherry, 
+  Utensils, 
+  Wheat, 
+  ClipboardList, 
+  Plus, 
+  Save, 
+  Pencil, 
+  Trash2, 
+  PlusCircle
+} from "lucide-react";
 
 // Imports "ui" do shadcn
 import {Button} from "@/components/ui/button";
@@ -183,7 +202,7 @@ export default function Dieta() {
       label: string;
       diff: number;
       color: string;
-    }[]
+    }[] 
   >([]);
 
   // Fields para produtos
@@ -823,7 +842,7 @@ export default function Dieta() {
         <Card className="p-3 bg-white mt-2">
           <h4 className="font-semibold text-base">Total Diário</h4>
           <p className="text-sm text-gray-700 mt-1">
-            {totals.cal.toFixed(1)} kcal | HC:{totals.c.toFixed(1)}g | P:
+            {totals.cal.toFixed(1)}kcal | HC:{totals.c.toFixed(1)}g | P:
             {totals.p.toFixed(1)}g | G:{totals.f.toFixed(1)}g
           </p>
         </Card>
@@ -855,7 +874,7 @@ export default function Dieta() {
       {/* (C) Ações Rápidas */}
       <Card className="p-4 space-y-2">
         <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
-          <span className="text-green-600">🛠️</span> Ações Rápidas
+          <span className="text-green-600"><Settings size={18} /></span> Ações Rápidas
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           <Button
@@ -903,12 +922,12 @@ export default function Dieta() {
       {/* (A) Resumo Diário */}
       <Card className="p-4 space-y-5">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-green-600">🍕</span> Resumo Diário
+          <span className="text-green-600"><Pizza size={18} /></span> Resumo Diário
         </h2>
         <div className="flex flex-wrap gap-3">
           <div className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 w-[130px]">
             <div className="text-sm font-medium text-gray-600 mb-1">
-              Calorias 🔥
+              Calorias <Flame size={16} className="inline text-orange-500" />
             </div>
             <div className="text-xl font-semibold text-gray-800">
               {daily.cal.toFixed(1)}
@@ -916,7 +935,7 @@ export default function Dieta() {
           </div>
           <div className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 w-[130px]">
             <div className="text-sm font-medium text-gray-600 mb-1">
-              Hidratos 🥔
+              Hidratos <Cherry size={16} className="inline text-amber-600" />
             </div>
             <div className="text-xl font-semibold text-gray-800">
               {daily.c.toFixed(1)}
@@ -924,7 +943,7 @@ export default function Dieta() {
           </div>
           <div className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 w-[130px]">
             <div className="text-sm font-medium text-gray-600 mb-1">
-              Proteina 🥩
+              Proteina <Beef size={16} className="inline text-rose-600" />
             </div>
             <div className="text-xl font-semibold text-gray-800">
               {daily.p.toFixed(1)}
@@ -932,7 +951,7 @@ export default function Dieta() {
           </div>
           <div className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-300 w-[130px]">
             <div className="text-sm font-medium text-gray-600 mb-1">
-              Gordura 🍕
+              Gordura <Apple size={16} className="inline text-blue-600" />
             </div>
             <div className="text-xl font-semibold text-gray-800">
               {daily.f.toFixed(1)}
@@ -944,7 +963,7 @@ export default function Dieta() {
       {/* (B) Limites por Refeição */}
       <Card className="p-4 space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <span className="text-green-600">🍽️</span> Limites por Refeição
+          <span className="text-green-600"><Utensils size={18} /></span> Limites por Refeição
         </h2>
         <p className="text-sm text-gray-600">
           Cada refeição tem limites baseados na % configurada abaixo.
@@ -954,10 +973,10 @@ export default function Dieta() {
             <thead>
               <tr className="border-b text-left">
                 <th className="p-2 font-medium text-gray-700">Refeição</th>
-                <th className="p-2 font-medium text-gray-700">Kcal 🔥</th>
-                <th className="p-2 font-medium text-gray-700">HC 🥔</th>
-                <th className="p-2 font-medium text-gray-700">P 🥩</th>
-                <th className="p-2 font-medium text-gray-700">G 🍕</th>
+                <th className="p-2 font-medium text-gray-700">Kcal <Flame size={14} className="inline text-orange-500" /></th>
+                <th className="p-2 font-medium text-gray-700">HC <Cherry size={14} className="inline text-amber-600" /></th>
+                <th className="p-2 font-medium text-gray-700">P <Beef size={14} className="inline text-rose-600" /></th>
+                <th className="p-2 font-medium text-gray-700">G <Apple size={14} className="inline text-blue-600" /></th>
               </tr>
             </thead>
             <tbody>
@@ -991,7 +1010,7 @@ export default function Dieta() {
       {/* (D) Ajuste de Percentagens */}
       <Card className="p-4 space-y-2">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          📊 Percentagens por Refeição
+          <span className="text-green-600"><BarChart3 size={18} /></span> Percentagens por Refeição
         </h2>
         <p className="text-sm text-gray-600">
           Defina a % de calorias para cada refeição (deve somar 100%).
@@ -1052,12 +1071,13 @@ export default function Dieta() {
 
       {/* ========== DIALOGOS ========== */}
 
+
       {/* Dialog Metas */}
       <Dialog open={metaDialogOpen} onOpenChange={setMetaDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">🎯</span> Gerir Metas
+              <span className="text-green-600"><Target size={18} /></span> Gerir Metas
             </DialogTitle>
             <p className="text-sm text-gray-500">
               Configure suas metas diárias de calorias e distribuição de
@@ -1093,7 +1113,7 @@ export default function Dieta() {
             {/* Macros */}
             <div className="space-y-4">
               <h4 className="font-medium text-gray-700 flex items-center gap-2">
-                <span className="text-green-600">📊</span> Distribuição de
+                <span className="text-green-600"><BarChart3 size={16} /></span> Distribuição de
                 Macros
               </h4>
 
@@ -1174,7 +1194,7 @@ export default function Dieta() {
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
-                <span>💾</span> Salvar Metas
+                <Save size={16} className="mr-1" /> Salvar Metas
               </Button>
             </DialogFooter>
           </form>
@@ -1186,7 +1206,7 @@ export default function Dieta() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sticky top-0 bg-white pb-4 z-10">
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">🥗</span> Gerir Produtos
+              <span className="text-green-600"><Salad size={18} /></span> Gerir Produtos
             </DialogTitle>
             <p className="text-sm text-gray-500">
               Gerencie sua lista de produtos e seus valores nutricionais por
@@ -1204,7 +1224,7 @@ export default function Dieta() {
                 }}
                 className="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 flex items-center gap-2"
               >
-                <span>➕</span> Novo Produto
+                <Plus size={16} /> Novo Produto
               </Button>
             </div>
 
@@ -1235,7 +1255,7 @@ export default function Dieta() {
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
-                          <span className="text-green-600 text-lg">🥗</span>
+                          <Salad size={16} className="text-green-600" />
                         </div>
                         <h3 className="font-medium text-gray-800">{p.name}</h3>
                       </div>
@@ -1246,7 +1266,7 @@ export default function Dieta() {
                           className="text-gray-400 hover:text-green-600 hover:bg-green-50"
                           onClick={() => handleEditProductClick(i)}
                         >
-                          ✏️
+                          <Pencil size={16} />
                         </Button>
                         <Button
                           variant="ghost"
@@ -1254,7 +1274,7 @@ export default function Dieta() {
                           className="text-gray-400 hover:text-red-600 hover:bg-red-50"
                           onClick={() => handleDeleteProduct(i)}
                         >
-                          🗑️
+                          <Trash2 size={16} />
                         </Button>
                       </div>
                     </div>
@@ -1309,7 +1329,7 @@ export default function Dieta() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">🥗</span> Novo Produto
+              <span className="text-green-600"><Salad size={18} /></span> Novo Produto
             </DialogTitle>
             <p className="text-sm text-gray-500">
               Insira os valores nutricionais por 100g de produto.
@@ -1331,7 +1351,7 @@ export default function Dieta() {
             {/* Macros Grid */}
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
               <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <span className="text-green-600">📊</span> Valores Nutricionais
+                <span className="text-green-600"><BarChart3 size={16} /></span> Valores Nutricionais
                 <span className="text-xs text-gray-500 ml-auto">por 100g</span>
               </h3>
 
@@ -1339,7 +1359,7 @@ export default function Dieta() {
                 {/* Calorias */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-green-600">🔥</span> Calorias
+                    <span className="text-green-600"><Flame size={16} className="text-orange-500" /></span> Calorias
                   </Label>
                   <div className="relative">
                     <Input
@@ -1365,7 +1385,7 @@ export default function Dieta() {
                 {/* Carboidratos */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-amber-600">🌾</span> Carboidratos
+                    <span className="text-amber-600"><Wheat size={16} /></span> Carboidratos
                   </Label>
                   <div className="relative">
                     <Input
@@ -1389,7 +1409,7 @@ export default function Dieta() {
                 {/* Proteína */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-rose-600">🥩</span> Proteína
+                    <span className="text-rose-600"><Beef size={16} /></span> Proteína
                   </Label>
                   <div className="relative">
                     <Input
@@ -1413,7 +1433,7 @@ export default function Dieta() {
                 {/* Gorduras */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-blue-600">🥑</span> Gorduras
+                    <span className="text-blue-600"><Apple size={16} /></span> Gorduras
                   </Label>
                   <div className="relative">
                     <Input
@@ -1449,7 +1469,7 @@ export default function Dieta() {
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
-                <span>➕</span> Adicionar
+                <Plus size={16} /> Adicionar
               </Button>
             </DialogFooter>
           </form>
@@ -1464,7 +1484,7 @@ export default function Dieta() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">✏️</span> Editar Produto
+              <span className="text-green-600"><Pencil size={18} /></span> Editar Produto
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               Atualize os valores nutricionais por 100g de produto.
@@ -1486,7 +1506,7 @@ export default function Dieta() {
             {/* Macros Grid */}
             <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
               <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <span className="text-green-600">📊</span> Valores Nutricionais
+                <span className="text-green-600"><BarChart3 size={16} /></span> Valores Nutricionais
                 <span className="text-xs text-gray-500 ml-auto">por 100g</span>
               </h3>
 
@@ -1494,7 +1514,7 @@ export default function Dieta() {
                 {/* Calorias */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-green-600">🔥</span> Calorias
+                    <span className="text-green-600"><Flame size={16} className="text-orange-500" /></span> Calorias
                   </Label>
                   <div className="relative">
                     <Input
@@ -1515,7 +1535,7 @@ export default function Dieta() {
                 {/* Carboidratos */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-amber-600">🌾</span> Carboidratos
+                    <span className="text-amber-600"><Wheat size={16} /></span> Carboidratos
                   </Label>
                   <div className="relative">
                     <Input
@@ -1534,7 +1554,7 @@ export default function Dieta() {
                 {/* Proteína */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-rose-600">🥩</span> Proteína
+                    <span className="text-rose-600"><Beef size={16} /></span> Proteína
                   </Label>
                   <div className="relative">
                     <Input
@@ -1553,7 +1573,7 @@ export default function Dieta() {
                 {/* Gorduras */}
                 <div className="space-y-2">
                   <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-blue-600">🥑</span> Gorduras
+                    <span className="text-blue-600"><Apple size={16} /></span> Gorduras
                   </Label>
                   <div className="relative">
                     <Input
@@ -1584,7 +1604,7 @@ export default function Dieta() {
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
-                <span>💾</span> Salvar Alterações
+                <Save size={16} className="mr-1" /> Salvar Alterações
               </Button>
             </DialogFooter>
           </form>
@@ -1702,7 +1722,7 @@ export default function Dieta() {
                                 onClick={() => handleRemovePlateItem(ii)}
                                 className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-all duration-300"
                               >
-                                Remover
+                                <Trash2 size={16} className="mr-1" /> Remover
                               </Button>
                             </div>
                           </Card>
@@ -1866,7 +1886,7 @@ export default function Dieta() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sticky top-0 bg-white pb-4 z-10">
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">🍽️</span> Gerir Refeições
+              <span className="text-green-600"><Utensils size={18} /></span> Gerir Refeições
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               Cada refeição só deve ter pratos idênticos em macros, para
@@ -1943,7 +1963,7 @@ export default function Dieta() {
                   onClick={addPlateToMealFromUI}
                   className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
                 >
-                  <span>➕</span> Adicionar Prato
+                  <Plus size={16} /> Adicionar Prato
                 </Button>
               </div>
             </Card>
@@ -1954,19 +1974,19 @@ export default function Dieta() {
                 <Card key={mealIndex} className="p-4">
                   <CardHeader className="p-0 pb-4">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                        {meal.name}
+                      <div className="flex items-center gap-2">
+                        <div className="text-lg font-semibold">{meal.name}</div>
                         <Badge variant="secondary" className="ml-2">
                           {meal.plates.length} pratos
                         </Badge>
-                      </CardTitle>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteMeal(mealIndex)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-2"
                       >
-                        <span>🗑️</span> Remover
+                        <Trash2 size={16} className="mr-1" /> Remover
                       </Button>
                     </div>
                   </CardHeader>
@@ -1976,7 +1996,7 @@ export default function Dieta() {
                       <Card key={plateIndex} className="p-3 bg-gray-50/50">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h4 className="font-medium">{plate.name}</h4>
+                            <div className="font-medium">{plate.name}</div>
                             <p className="text-sm text-muted-foreground">
                               {sumPlate(plate).cal.toFixed(1)}kcal | P:{" "}
                               {sumPlate(plate).p.toFixed(1)}g | C:{" "}
@@ -1993,7 +2013,7 @@ export default function Dieta() {
                               }
                               className="hover:bg-green-50 gap-1"
                             >
-                              <span>✏️</span> Editar
+                              <Pencil size={16} className="mr-1" /> Editar
                             </Button>
                             <Button
                               variant="outline"
@@ -2003,7 +2023,7 @@ export default function Dieta() {
                               }
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-1"
                             >
-                              <span>🗑️</span> Remover
+                              <Trash2 size={16} className="mr-1" /> Remover
                             </Button>
                           </div>
                         </div>
@@ -2013,211 +2033,6 @@ export default function Dieta() {
                 </Card>
               ))}
             </div>
-          </div>
-
-          <DialogFooter className="sticky bottom-0 bg-white pt-4 z-10">
-            <Button
-              variant="outline"
-              onClick={() => setMealDialogOpen(false)}
-              className="hover:bg-gray-100"
-            >
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Ver Plano Atual */}
-      <Dialog open={viewPlanDialogOpen} onOpenChange={setViewPlanDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sticky top-0 bg-white pb-4 z-10">
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <span className="text-green-600">📋</span> Plano Atual
-            </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              Aqui estão todas as refeições e pratos já criados. Cada refeição
-              aceita apenas pratos idênticos em macros.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-            {meals.length === 0 ? (
-              <div className="bg-gray-50 rounded-xl p-8 text-center">
-                <p className="text-gray-500 mb-2">Nenhum plano criado ainda.</p>
-                <Button
-                  onClick={() => {
-                    setViewPlanDialogOpen(false);
-                    setMealDialogOpen(true);
-                  }}
-                  className="bg-green-50 text-green-600 hover:bg-green-100"
-                >
-                  Começar a Criar Plano
-                </Button>
-              </div>
-            ) : (
-              <>
-                {meals.map((m, i) => {
-                  const mealMacros = calculateMealTargets(m.name);
-
-                  if (m.plates.length === 0) {
-                    return (
-                      <Card key={i} className="bg-white">
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                              {m.name}
-                              <Badge variant="outline" className="ml-2">
-                                Vazia
-                              </Badge>
-                            </CardTitle>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Meta: {mealMacros.cal.toFixed(1)}kcal | P:{" "}
-                            {mealMacros.p.toFixed(1)}g | C:{" "}
-                            {mealMacros.c.toFixed(1)}g | G:{" "}
-                            {mealMacros.f.toFixed(1)}g
-                          </p>
-                        </CardHeader>
-                      </Card>
-                    );
-                  }
-
-                  return (
-                    <Card key={i} className="bg-white">
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                            {m.name}
-                            <Badge variant="secondary" className="ml-2">
-                              {m.plates.length}{" "}
-                              {m.plates.length === 1 ? "prato" : "pratos"}
-                            </Badge>
-                          </CardTitle>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Meta: {mealMacros.cal.toFixed(1)}kcal | P:{" "}
-                          {mealMacros.p.toFixed(1)}g | C:{" "}
-                          {mealMacros.c.toFixed(1)}g | G:{" "}
-                          {mealMacros.f.toFixed(1)}g
-                        </p>
-                      </CardHeader>
-
-                      <div className="p-6 pt-0 space-y-4">
-                        {m.plates.map((pl, j) => {
-                          const sp = sumPlate(pl);
-                          return (
-                            <Card key={j} className="bg-gray-50/50">
-                              <CardHeader className="p-4">
-                                <div className="flex items-center justify-between">
-                                  <CardTitle className="text-base font-medium">
-                                    {pl.name}
-                                  </CardTitle>
-                                  <Badge className="bg-green-100 text-green-700 hover:bg-green-200">
-                                    {sp.cal.toFixed(1)} kcal
-                                  </Badge>
-                                </div>
-                                <div className="flex gap-3 text-sm text-muted-foreground mt-1">
-                                  <span>P: {sp.p.toFixed(1)}g</span>
-                                  <span>C: {sp.c.toFixed(1)}g</span>
-                                  <span>G: {sp.f.toFixed(1)}g</span>
-                                </div>
-                              </CardHeader>
-
-                              <div className="px-4 pb-4">
-                                <div className="space-y-2">
-                                  {pl.items.map((it, k) => {
-                                    const prod = products[it.productIndex];
-                                    const factor = it.grams / 100;
-                                    return (
-                                      <div
-                                        key={k}
-                                        className="flex items-center justify-between bg-white rounded-lg p-2 text-sm"
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-green-600">
-                                            🥗
-                                          </span>
-                                          <div>
-                                            <p className="font-medium">
-                                              {prod.name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                              {it.grams.toFixed(1)}g
-                                            </p>
-                                          </div>
-                                        </div>
-                                        <div className="text-xs text-right text-muted-foreground">
-                                          <p>
-                                            P: {(prod.p * factor).toFixed(1)}g
-                                          </p>
-                                          <p>
-                                            C: {(prod.c * factor).toFixed(1)}g
-                                          </p>
-                                          <p>
-                                            G: {(prod.f * factor).toFixed(1)}g
-                                          </p>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </Card>
-                  );
-                })}
-
-                {/* Totais */}
-                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
-                  <CardHeader>
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                      <span className="text-green-600">📊</span> Total Diário
-                    </CardTitle>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">
-                          Calorias
-                        </p>
-                        <p className="text-xl font-semibold text-gray-800">
-                          {calculateTotals().cal.toFixed(1)}
-                        </p>
-                        <p className="text-xs text-gray-500">kcal</p>
-                      </div>
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">
-                          Proteínas
-                        </p>
-                        <p className="text-xl font-semibold text-gray-800">
-                          {calculateTotals().p.toFixed(1)}
-                        </p>
-                        <p className="text-xs text-gray-500">gramas</p>
-                      </div>
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">
-                          Carboidratos
-                        </p>
-                        <p className="text-xl font-semibold text-gray-800">
-                          {calculateTotals().c.toFixed(1)}
-                        </p>
-                        <p className="text-xs text-gray-500">gramas</p>
-                      </div>
-                      <div className="bg-white rounded-xl p-3 shadow-sm">
-                        <p className="text-sm font-medium text-gray-600">
-                          Gorduras
-                        </p>
-                        <p className="text-xl font-semibold text-gray-800">
-                          {calculateTotals().f.toFixed(1)}
-                        </p>
-                        <p className="text-xs text-gray-500">gramas</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              </>
-            )}
           </div>
 
           <DialogFooter className="sticky bottom-0 bg-white pt-4 z-10">
@@ -2265,8 +2080,8 @@ export default function Dieta() {
                 </li>
               ))}
             </ul>
-            <p className="text-gray-600 text-xs">
-              Pode Ajustar p/ voltar e corrigir ou Continuar mesmo assim.
+            <p className="text-gray-600 text-xs flex items-center gap-2">
+              <span>⚠️</span> Pode Ajustar p/ voltar e corrigir ou Continuar mesmo assim.
             </p>
           </div>
           <DialogFooter>

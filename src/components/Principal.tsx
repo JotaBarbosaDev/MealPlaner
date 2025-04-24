@@ -1,823 +1,634 @@
 "use client";
 
-import React, {FormEvent, useState} from "react";
+import React, { useMemo } from "react";
 import useLocalStorage from "use-local-storage";
-import {toast} from "react-toastify";
+import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Home, Activity, Scale, Target, Flame, 
+  BarChart3, Utensils, CalendarCheck, LayoutGrid, 
+  Dumbbell, Apple, Weight, Calendar, Trophy, TrendingUp
+} from "lucide-react";
 
-// Shadcn UI
-import {Card} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
+// Componentes partilhados
+import { SectionHeader } from "@/components/shared/SectionHeader";
+import { StatCard } from "@/components/shared/StatCard";
+import { ExpandableCard } from "@/components/shared/ExpandableCard";
+import { StreakCard } from "@/components/shared/StreakCard";
+import { DailyTip } from "@/components/shared/DailyTip";
 
-/* -----------------------------------------
-   Tipos/Tabelas para Treino e Dieta
------------------------------------------*/
-type DayOfWeek =
-  | "Segunda-feira"
-  | "Terça-feira"
-  | "Quarta-feira"
-  | "Quinta-feira"
-  | "Sexta-feira"
-  | "Sábado"
-  | "Domingo";
+// Componentes UI
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
-interface Exercise {
-  name: string;
-  series: number;
-  repetitions: number;
-  pause: number; // em segundos
-}
+// Tipos
+import type { Measurement } from "@/types/pesagens";
+import type { Workout, WeeklyPlan, TrainingLogEntry, Exercise } from "@/types/treino";
+import type { Meal, Plate, Product } from "@/types/dieta";
+import type { UserStreaks, Streak } from "@/types/streaks";
 
-// Se o treino estiver no formato antigo, terá a chave "exercises" (array de Exercise)
-// Se estiver no novo formato, terá "exerciseIds" (array de números)
-interface Workout {
-  name: string;
-  exercises?: Exercise[];
-  exerciseIds?: number[];
-}
-
-interface WeeklyPlan {
-  [key: string]: string; // Dia -> Nome do Treino ou "Descanso"
-}
-
-interface TrainingSet {
-  reps: number;
-  weight: number;
-}
-
-interface ExerciseLog {
-  exerciseName: string;
-  sets: TrainingSet[];
-}
-
-interface TrainingLogEntry {
-  date: string; // yyyy-mm-dd
-  dayOfWeek: DayOfWeek;
-  workoutName: string;
-  exerciseLogs: ExerciseLog[];
-}
-
-// DIETA
-type MealName = "Pequeno-Almoço" | "Almoço" | "Lanche da Tarde" | "Jantar";
-
-interface Product {
-  name: string;
-  p: number; // Proteína/100g
-  f: number; // Gordura/100g
-  c: number; // Carboidratos/100g
-  cal: number; // Calorias/100g
-}
-
-interface PlateItem {
-  productIndex: number;
-  grams: number;
-}
-
-interface Plate {
-  name: string;
-  mealName: MealName;
-  items: PlateItem[];
-}
-
-interface PlateMeal {
-  name: MealName;
-  plates: Plate[];
-}
-
-/* -----------------------------------------
-   COMPONENTE PRINCIPAL
------------------------------------------*/
 export default function Principal() {
-  /* ----------------------
-     ESTADOS - TREINO
-  -----------------------*/
+  const { toast } = useToast();
+  
+  /* =============================
+     1) ESTADOS (do localStorage)
+  ============================== */
+  // Dieta
+  const [meals] = useLocalStorage<Meal[]>("meals", []);
+  const [calTarget] = useLocalStorage<number>("calTarget", 1975);
+  const [protPercent] = useLocalStorage<number>("protPercent", 30);
+  const [fatPercent] = useLocalStorage<number>("fatPercent", 20);
+  const [carbPercent] = useLocalStorage<number>("carbPercent", 50);
+
+  // Treino
   const [exercises] = useLocalStorage<Exercise[]>("exercises", []);
   const [workouts] = useLocalStorage<Workout[]>("workouts", []);
-  const [weeklyPlan] = useLocalStorage<WeeklyPlan>("weeklyPlan", {
-    "Segunda-feira": "Descanso",
-    "Terça-feira": "Descanso",
-    "Quarta-feira": "Descanso",
-    "Quinta-feira": "Descanso",
-    "Sexta-feira": "Descanso",
-    Sábado: "Descanso",
-    Domingo: "Descanso",
+  const [weeklyPlan] = useLocalStorage<WeeklyPlan>("weeklyPlan", {});
+  const [trainingLogs] = useLocalStorage<TrainingLogEntry[]>("trainingLogs", []);
+
+  // Pesagens
+  const [measurements] = useLocalStorage<Measurement[]>("measurements", []);
+
+  // Sequências (Streaks)
+  const emptyStreak: Streak = {
+    count: 0,
+    lastUpdate: new Date().toISOString(),
+    startDate: new Date().toISOString(),
+  };
+  
+  const [streaks, setStreaks] = useLocalStorage<UserStreaks>("streaks", {
+    diet: emptyStreak,
+    training: emptyStreak
   });
-  const [trainingLogs, setTrainingLogs] = useLocalStorage<TrainingLogEntry[]>(
-    "trainingLogs",
-    []
-  );
 
-  const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
-    null
-  );
-  const [newSetReps, setNewSetReps] = useState(0);
-  const [newSetWeight, setNewSetWeight] = useState(0);
-  const [editSetIndex, setEditSetIndex] = useState<number | null>(null);
+  /* =============================
+     2) CÁLCULOS E AUXILIARES
+  ============================== */
+  // Data atual
+  const today = new Date();
+  const dayNames = [
+    "Domingo",
+    "Segunda-feira",
+    "Terça-feira",
+    "Quarta-feira",
+    "Quinta-feira",
+    "Sexta-feira",
+    "Sábado",
+  ];
+  const currentDayOfWeek = dayNames[today.getDay()];
+  const formattedDate = today.toLocaleDateString("pt-PT", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
-  const [openLogDates, setOpenLogDates] = useState<string[]>([]);
+  // Verifica se hoje é dia de treino
+  const todayWorkout = weeklyPlan && weeklyPlan[currentDayOfWeek];
+  const isTrainingDay = todayWorkout && todayWorkout !== "Descanso";
 
-  /* ----------------------
-     FUNÇÃO: Adicionar/Editar Set
-  -----------------------*/
-  function handleSaveSet() {
-    // Só tenta salvar se tanto o dia quanto o exercício estiverem selecionados
-    if (!selectedDay || !selectedExercise) return;
-    if (newSetReps <= 0 || newSetWeight < 0) {
-      toast("Valores inválidos para repetições/peso.");
-      return;
-    }
+  // Últimas medições
+  const lastMeasurement = useMemo(() => {
+    if (!measurements || measurements.length === 0) return null;
 
-    const assignedWorkout = weeklyPlan[selectedDay];
-    if (!assignedWorkout || assignedWorkout === "Descanso") {
-      toast("Não há treino neste dia!");
-      return;
-    }
+    return [...measurements].sort((a, b) => {
+      return new Date(`${b.date}T${b.time}`).getTime() - 
+             new Date(`${a.date}T${a.time}`).getTime();
+    })[0];
+  }, [measurements]);
 
-    const todayDate = new Date().toISOString().slice(0, 10);
-    const existingLogIndex = trainingLogs.findIndex(
-      (log) =>
-        log.date === todayDate &&
-        log.dayOfWeek === selectedDay &&
-        log.workoutName === assignedWorkout
-    );
+  // Cálculo de IMC
+  const calculateBMI = (weight: number, height: number) => {
+    if (!weight || !height) return 0;
+    const heightMeters = height / 100;
+    return +(weight / (heightMeters * heightMeters)).toFixed(1);
+  };
 
-    let updatedLogs = [...trainingLogs];
-    let targetLog: TrainingLogEntry;
+  // Classificar IMC
+  const getBMICategory = (bmi: number) => {
+    if (bmi < 18.5) return { label: "Abaixo do peso", color: "text-blue-600" };
+    if (bmi < 25) return { label: "Peso normal", color: "text-green-600" };
+    if (bmi < 30) return { label: "Excesso de peso", color: "text-yellow-600" };
+    if (bmi < 35) return { label: "Obesidade grau I", color: "text-orange-600" };
+    if (bmi < 40) return { label: "Obesidade grau II", color: "text-red-600" };
+    return { label: "Obesidade grau III", color: "text-red-800" };
+  };
 
-    if (existingLogIndex >= 0) {
-      targetLog = {...updatedLogs[existingLogIndex]};
+  // Cálculo de calorias diárias por macros
+  const calculateDailyTargets = () => {
+    const p = ((protPercent / 100) * calTarget) / 4;
+    const f = ((fatPercent / 100) * calTarget) / 9;
+    const c = ((carbPercent / 100) * calTarget) / 4;
+    return { p, f, c, cal: calTarget };
+  };
+
+  // Contagem de treinos na semana
+  const weeklyTrainingCount = useMemo(() => {
+    if (!weeklyPlan) return 0;
+    return Object.values(weeklyPlan).filter(val => val !== "Descanso").length;
+  }, [weeklyPlan]);
+
+  // Estatísticas de treino
+  const trainingStats = useMemo(() => {
+    if (!trainingLogs || trainingLogs.length === 0) return null;
+
+    const totalWorkouts = trainingLogs.length;
+    
+    // Encontrar último treino
+    const lastTraining = [...trainingLogs].sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    })[0];
+    
+    return {
+      totalWorkouts,
+      lastTrainingDate: lastTraining.date,
+      lastWorkoutName: lastTraining.workoutName
+    };
+  }, [trainingLogs]);
+
+  // Verificar e atualizar sequências (streaks)
+  const updateTrainingStreak = () => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    const newStreaks = { ...streaks };
+    
+    // Verificar se a última atualização foi há mais de 48 horas (quebra de sequência)
+    const lastUpdate = new Date(streaks.training.lastUpdate);
+    const hoursDiff = (today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 48) {
+      // Reiniciar a sequência
+      newStreaks.training = {
+        count: 1,
+        lastUpdate: today.toISOString(),
+        startDate: today.toISOString()
+      };
     } else {
-      targetLog = {
-        date: todayDate,
-        dayOfWeek: selectedDay,
-        workoutName: assignedWorkout,
-        exerciseLogs: [],
+      // Continuar a sequência
+      newStreaks.training = {
+        count: streaks.training.count + 1,
+        lastUpdate: today.toISOString(),
+        startDate: streaks.training.startDate
       };
     }
+    
+    setStreaks(newStreaks);
+    return newStreaks.training.count;
+  };
 
-    // Procura pelo log do exercício selecionado ou cria um novo
-    const exerciseLogIndex = targetLog.exerciseLogs.findIndex(
-      (el) => el.exerciseName === selectedExercise.name
-    );
-    let exLog: ExerciseLog;
-    if (exerciseLogIndex >= 0) {
-      exLog = {...targetLog.exerciseLogs[exerciseLogIndex]};
+  const updateDietStreak = () => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    const newStreaks = { ...streaks };
+    
+    // Verificar se a última atualização foi há mais de 24 horas (quebra de sequência)
+    const lastUpdate = new Date(streaks.diet.lastUpdate);
+    const hoursDiff = (today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 24) {
+      // Reiniciar a sequência
+      newStreaks.diet = {
+        count: 1,
+        lastUpdate: today.toISOString(),
+        startDate: today.toISOString()
+      };
     } else {
-      exLog = {exerciseName: selectedExercise.name, sets: []};
+      // Continuar a sequência
+      newStreaks.diet = {
+        count: streaks.diet.count + 1,
+        lastUpdate: today.toISOString(),
+        startDate: streaks.diet.startDate
+      };
     }
+    
+    setStreaks(newStreaks);
+    return newStreaks.diet.count;
+  };
 
-    if (editSetIndex !== null) {
-      exLog.sets[editSetIndex] = {reps: newSetReps, weight: newSetWeight};
-    } else {
-      exLog.sets.push({reps: newSetReps, weight: newSetWeight});
-    }
-
-    if (exerciseLogIndex >= 0) {
-      targetLog.exerciseLogs[exerciseLogIndex] = exLog;
-    } else {
-      targetLog.exerciseLogs.push(exLog);
-    }
-
-    if (existingLogIndex >= 0) {
-      updatedLogs[existingLogIndex] = targetLog;
-    } else {
-      updatedLogs.push(targetLog);
-    }
-    setTrainingLogs(updatedLogs);
-
-    toast(
-      editSetIndex !== null
-        ? "Set editado com sucesso!"
-        : "Set adicionado ao registo de hoje!"
-    );
-
-    // Reseta os inputs
-    setNewSetReps(0);
-    setNewSetWeight(0);
-    setEditSetIndex(null);
-  }
-
-  /* ----------------------
-     FUNÇÃO: Renderizar Sets do Exercício Selecionado
-  -----------------------*/
-  function renderSetsOfSelectedExercise() {
-    if (!selectedDay || !selectedExercise) {
-      return (
-        <p className="text-sm text-gray-500 italic">
-          Selecione um exercício para registrar os sets.
-        </p>
-      );
-    }
-
-    const assignedWorkout = weeklyPlan[selectedDay];
-    if (!assignedWorkout || assignedWorkout === "Descanso") {
-      return <p className="text-sm italic">Dia de descanso.</p>;
-    }
-
-    const todayDate = new Date().toISOString().slice(0, 10);
-
-    // Filtra logs do mesmo dia da semana e mesmo treino
-    const relevantLogs = trainingLogs
-      .filter(
-        (log) =>
-          log.dayOfWeek === selectedDay && log.workoutName === assignedWorkout
-      )
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    return (
-      <div className="space-y-6">
-        {/* Sets de Hoje */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-green-700 flex items-center gap-2">
-            <span className="text-lg">📝</span> Sets de Hoje
-          </h4>
-          {(() => {
-            const todayLog = relevantLogs.find((log) => log.date === todayDate);
-            const exLog = todayLog?.exerciseLogs.find(
-              (el) => el.exerciseName === selectedExercise.name
-            );
-
-            if (!exLog || exLog.sets.length === 0) {
-              return (
-                <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <p className="text-sm text-gray-500">
-                    Nenhum set registado ainda para {selectedExercise.name}.
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Use o formulário acima para adicionar sets.
-                  </p>
-                </div>
-              );
-            }
-
-            return exLog.sets.map((s, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
-              >
-                <div className="p-3 flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
-                      {idx + 1}
-                    </span>
-                    <div className="flex gap-4 text-sm">
-                      <span className="flex items-center gap-1">
-                        <span className="text-green-600">🔄</span>
-                        {s.reps} reps
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="text-green-600">⚖️</span>
-                        {s.weight} kg
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-green-600 hover:bg-green-50"
-                      onClick={() => {
-                        setNewSetReps(s.reps);
-                        setNewSetWeight(s.weight);
-                        setEditSetIndex(idx);
-                      }}
-                    >
-                      ✏️
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ));
-          })()}
-        </div>
-
-        {/* Histórico de Sets */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-green-700 flex items-center gap-2">
-            <span className="text-lg">📅</span> Histórico
-          </h4>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-            {relevantLogs
-              .filter((log) => log.date !== todayDate)
-              .map((log, idx) => {
-                const exerciseLog = log.exerciseLogs.find(
-                  (el) => el.exerciseName === selectedExercise.name
-                );
-
-                if (!exerciseLog) return null;
-
-                const isOpen = openLogDates.includes(log.date);
-
-                return (
-                  <div
-                    key={idx}
-                    className="border border-gray-200 rounded-xl overflow-hidden bg-white"
-                  >
-                    <Button
-                      variant="ghost"
-                      className="w-full text-sm justify-between p-4 hover:bg-gray-50"
-                      onClick={() => toggleLogDate(log.date)}
-                    >
-                      <span className="font-medium text-gray-700 flex items-center gap-2">
-                        <span className="text-green-600">📅</span>
-                        {new Date(log.date).toLocaleDateString("pt-PT", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </span>
-                      <span
-                        className={`transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      >
-                        ▼
-                      </span>
-                    </Button>
-
-                    {isOpen && (
-                      <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-2">
-                        {exerciseLog.sets.map((set, setIdx) => (
-                          <div
-                            key={setIdx}
-                            className="bg-white rounded-lg border border-gray-200 p-3 flex justify-between items-center"
-                          >
-                            <div className="flex items-center gap-4">
-                              <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-medium">
-                                {setIdx + 1}
-                              </span>
-                              <div className="flex gap-4 text-sm">
-                                <span className="flex items-center gap-1">
-                                  <span className="text-green-600">🔄</span>
-                                  {set.reps} reps
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <span className="text-green-600">⚖️</span>
-                                  {set.weight} kg
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  /* ----------------------
-     FUNÇÃO: Renderizar Dias da Semana
-  -----------------------*/
-  function renderWeeklyDays() {
-    const days = Object.keys(weeklyPlan) as DayOfWeek[];
-    return (
-      <div className="w-full overflow-x-auto py-2">
-        <div className="flex space-x-2 whitespace-nowrap">
-          {days.map((day) => {
-            const isSelected = day === selectedDay;
-            const assignedWorkout = weeklyPlan[day];
-            const isRest = assignedWorkout === "Descanso";
-            return (
-              <Button
-                key={day}
-                size="sm"
-                variant={isSelected ? "default" : "outline"}
-                className={`min-w-[110px] sm:min-w-[140px] transition-transform active:scale-95 ${
-                  isRest
-                    ? "bg-gray-100 text-gray-600"
-                    : "bg-white text-green-700 border-green-700"
-                }`}
-                onClick={() => setSelectedDay(day)}
-              >
-                {isRest ? `😴 ${day}` : `🏋️ ${day}`}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  /* ----------------------
-     FUNÇÃO: Renderizar Exercícios do Dia Selecionado
-  -----------------------*/
-  function renderExercisesOfSelectedDay() {
-    if (!selectedDay) {
-      return (
-        <p className="text-sm text-gray-500 italic">
-          Selecione um dia acima para ver o treino.
-        </p>
-      );
-    }
-
-    const assignedWorkout = weeklyPlan[selectedDay];
-    if (!assignedWorkout || assignedWorkout === "Descanso") {
-      return (
-        <div className="bg-gray-50 p-4 rounded-xl text-center">
-          <span className="text-2xl mb-2 block">😴</span>
-          <p className="text-sm text-gray-600">Dia de descanso.</p>
-        </div>
-      );
-    }
-
-    const wt = workouts.find((w) => w.name === assignedWorkout);
-    if (!wt) {
-      return (
-        <p className="text-sm text-gray-600 italic">
-          Treino "{assignedWorkout}" não encontrado.
-        </p>
-      );
-    }
-
-    let workoutExercises: Exercise[] = [];
-    if (Array.isArray(wt.exercises)) {
-      workoutExercises = wt.exercises;
-    } else if (Array.isArray(wt.exerciseIds)) {
-      workoutExercises = wt.exerciseIds
-        .map((id) => exercises[id])
-        .filter(Boolean);
-    }
-
-    if (workoutExercises.length === 0) {
-      return (
-        <p className="text-sm text-gray-500 italic">
-          Nenhum exercício neste treino.
-        </p>
-      );
-    }
-
-    return (
-      <div className="space-y-3">
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-xl">
-          <h3 className="text-green-700 font-medium flex items-center gap-2">
-            <span className="text-lg">🏋️</span>
-            Treino: {assignedWorkout}
-          </h3>
-        </div>
-
-        <div className="grid gap-2">
-          {workoutExercises.map((ex, i) => {
-            const isSelected =
-              selectedExercise && selectedExercise.name === ex.name;
-            return (
-              <div
-                key={i}
-                className={`bg-white border rounded-xl transition-all duration-300 overflow-hidden
-                  ${
-                    isSelected
-                      ? "border-green-200 shadow-md"
-                      : "border-gray-200 hover:border-green-200 hover:shadow-sm"
-                  }`}
-              >
-                <Button
-                  className={`w-full justify-between p-4 h-auto
-                    ${isSelected ? "bg-green-50" : "hover:bg-gray-50"}`}
-                  variant="ghost"
-                  onClick={() => {
-                    setSelectedExercise(ex);
-                    setNewSetReps(0);
-                    setNewSetWeight(0);
-                    setEditSetIndex(null);
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-green-600 text-lg">
-                      {isSelected ? "🎯" : "💪"}
-                    </span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-800">{ex.name}</p>
-                      <div className="flex gap-3 text-xs text-gray-500 mt-1">
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-600">🔄</span>
-                          {ex.series}x{ex.repetitions}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-600">⏱️</span>
-                          {ex.pause}s pausa
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-green-600">
-                    {isSelected ? "▼" : "▶"}
-                  </span>
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  /* ----------------------
-     DIETA
-  -----------------------*/
-  const [products] = useLocalStorage<Product[]>("products", []);
-  const [meals] = useLocalStorage<PlateMeal[]>("meals", [
-    {name: "Pequeno-Almoço", plates: []},
-    {name: "Almoço", plates: []},
-    {name: "Lanche da Tarde", plates: []},
-    {name: "Jantar", plates: []},
-  ]);
-
-  const [openPlates, setOpenPlates] = useState<string[]>([]);
-
-  function sumPlate(plate: Plate) {
-    return plate.items.reduce(
-      (acc, item) => {
-        const product = products[item.productIndex];
-        if (!product) return acc;
-        const factor = item.grams / 100;
-        return {
-          p: acc.p + product.p * factor,
-          f: acc.f + product.f * factor,
-          c: acc.c + product.c * factor,
-          cal: acc.cal + product.cal * factor,
-        };
-      },
-      {p: 0, f: 0, c: 0, cal: 0}
-    );
-  }
-
-  function togglePlate(plateName: string) {
-    if (openPlates.includes(plateName)) {
-      setOpenPlates(openPlates.filter((n) => n !== plateName));
-    } else {
-      setOpenPlates([...openPlates, plateName]);
-    }
-  }
-
-  function renderDietPlan() {
-    if (!meals || meals.length === 0) {
-      return (
-        <p className="text-sm text-gray-600 italic">
-          Nenhuma refeição definida.
-        </p>
-      );
-    }
-    return meals.map((meal, i) => (
-      <div
-        key={i}
-        className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300"
+  /* =============================
+     3) RENDER
+  ============================== */
+  const daily = calculateDailyTargets();
+  
+  return (
+    <div className="space-y-6">
+      {/* Header do Dashboard */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
       >
-        <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50">
-          <h3 className="text-base font-semibold text-green-700 flex items-center gap-2">
-            <span className="text-lg">🍽️</span>
-            {meal.name}
-          </h3>
-        </div>
-
-        {meal.plates.length === 0 ? (
-          <p className="text-sm text-gray-500 italic p-4">
-            Nenhum prato nesta refeição.
-          </p>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {meal.plates.map((pl, j) => {
-              const isOpen = openPlates.includes(pl.name);
-              return (
-                <div key={j} className="p-3">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-between hover:bg-green-50 transition-colors"
-                    onClick={() => togglePlate(pl.name)}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-green-600">
-                        {isOpen ? "🔽" : "▶️"}
-                      </span>
-                      {pl.name}
-                    </span>
-                  </Button>
-
-                  {isOpen && (
-                    <div className="mt-2 space-y-2">
-                      {pl.items.length === 0 ? (
-                        <p className="text-sm text-gray-500 italic ml-6">
-                          Nenhum produto neste prato.
-                        </p>
-                      ) : (
-                        <div className="ml-6 space-y-2">
-                          {pl.items.map((it, idx) => {
-                            const product = products[it.productIndex];
-                            if (!product) return null;
-                            const factor = it.grams / 100;
-                            const pVal = product.p * factor;
-                            const fVal = product.f * factor;
-                            const cVal = product.c * factor;
-                            const calVal = product.cal * factor;
-
-                            return (
-                              <div
-                                key={idx}
-                                className="bg-gray-50 p-2 rounded-lg text-sm"
-                              >
-                                <div className="flex justify-between items-center">
-                                  <span className="font-medium text-gray-700">
-                                    {product.name}
-                                  </span>
-                                  <span className="text-gray-500">
-                                    {it.grams}g
-                                  </span>
-                                </div>
-                                <div className="mt-1 text-xs text-gray-600 flex gap-3">
-                                  <span>HC: {cVal.toFixed(1)}g</span>
-                                  <span>P: {pVal.toFixed(1)}g</span>
-                                  <span>G: {fVal.toFixed(1)}g</span>
-                                  <span>Cal: {calVal.toFixed(1)}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          <div className="bg-green-50 p-2 rounded-lg mt-3">
-                            <p className="text-sm font-medium text-green-700">
-                              Total do Prato
-                            </p>
-                            {(() => {
-                              const sp = sumPlate(pl);
-                              return (
-                                <div className="text-xs text-gray-600 flex gap-3 mt-1">
-                                  <span>Cal: {sp.cal.toFixed(1)}kcal</span>
-                                  <span>HC: {sp.c.toFixed(1)}g</span>
-                                  <span>P: {sp.p.toFixed(1)}g</span>
-                                  <span>G: {sp.f.toFixed(1)}g</span>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-800">Olá!</h1>
+            <p className="text-gray-500">{formattedDate}</p>
           </div>
+          
+          <div>
+            {isTrainingDay ? (
+              <Badge className="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 text-sm">
+                Hoje é dia de treino: {todayWorkout}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 text-sm">
+                Hoje é dia de descanso
+              </Badge>
+            )}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Dica do dia */}
+      <DailyTip className="mb-2" />
+
+      {/* Sequências (Streaks) */}
+      <SectionHeader
+        title="As Tuas Sequências"
+        icon={<Flame className="text-orange-500" size={20} />}
+        description="Mantém o foco nos teus objetivos diários"
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <StreakCard type="training" streak={streaks.training} />
+        <StreakCard type="diet" streak={streaks.diet} />
+      </div>
+
+      {/* Resumo rápido */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          icon={<Target size={24} />}
+          label="Meta Calórica"
+          value={calTarget}
+          unit="kcal"
+          color="amber"
+          delay={0.1}
+        />
+        
+        <StatCard
+          icon={<Dumbbell size={24} />}
+          label="Treinos Semanais"
+          value={weeklyTrainingCount}
+          unit="dias"
+          color="green"
+          delay={0.2}
+        />
+        
+        {lastMeasurement && (
+          <StatCard
+            icon={<Scale size={24} />}
+            label="Peso Atual"
+            value={lastMeasurement.weight}
+            unit="kg"
+            color="blue"
+            delay={0.3}
+          />
+        )}
+        
+        {lastMeasurement && (
+          <StatCard
+            icon={<Activity size={24} />}
+            label="IMC"
+            value={calculateBMI(lastMeasurement.weight, lastMeasurement.height)}
+            unit=""
+            color="rose"
+            delay={0.4}
+          />
         )}
       </div>
-    ));
-  }
 
-  function toggleLogDate(date: string) {
-    if (openLogDates.includes(date)) {
-      setOpenLogDates(openLogDates.filter((d) => d !== date));
-    } else {
-      setOpenLogDates([...openLogDates, date]);
-    }
-  }
+      {/* Treino de Hoje */}
+      <SectionHeader
+        title="Plano de Hoje"
+        icon={<Calendar className="text-blue-500" size={20} />}
+        description={`${currentDayOfWeek}, ${today.getDate()} de ${today.toLocaleDateString('pt-PT', {month: 'long'})}`}
+      />
 
-  /* ----------------------
-     RENDER FINAL
-  -----------------------*/
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* TOPO */}
-      <header className="bg-gradient-to-r from-green-500 via-green-400 to-emerald-400 text-white p-4 sm:p-6 shadow-lg rounded-xl mb-4">
-        <h1 className="text-xl sm:text-2xl font-bold text-center flex items-center justify-center gap-3">
-          <span className="text-2xl sm:text-3xl">🌱</span>
-          Plano Nutricional + Treino
-        </h1>
-      </header>
+      {isTrainingDay ? (
+        <ExpandableCard
+          title={todayWorkout}
+          icon={<Dumbbell className="text-blue-600" size={20} />}
+          defaultExpanded={true}
+          subtitle="Treino de Hoje"
+          hideExpandButton={false}
+        >
+          <div className="space-y-3">
+            {workouts
+              .filter(w => w.name === todayWorkout)
+              .map((workout, idx) => (
+                <div key={idx} className="space-y-3">
+                  <div className="bg-green-50 py-2 px-3 rounded-lg text-sm text-green-700">
+                    {workout.exerciseIds ? workout.exerciseIds.length : workout.exercises?.length || 0} exercícios neste treino
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {workout.exerciseIds ? 
+                      workout.exerciseIds.map((exId, i) => {
+                        const ex = exercises[exId];
+                        if (!ex) return null;
+                        
+                        return (
+                          <div 
+                            key={i} 
+                            className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center font-medium text-green-700">
+                                {i+1}
+                              </span>
+                              <span className="font-medium text-gray-700">{ex.name}</span>
+                            </div>
+                            <span className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">
+                              {ex.series} × {ex.repetitions}
+                            </span>
+                          </div>
+                        );
+                      }) : 
+                      workout.exercises?.map((ex, i) => (
+                        <div 
+                          key={i} 
+                          className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-200 shadow-sm"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center font-medium text-green-700">
+                              {i+1}
+                            </span>
+                            <span className="font-medium text-gray-700">{ex.name}</span>
+                          </div>
+                          <span className="bg-gray-100 px-2 py-1 rounded text-xs text-gray-600">
+                            {ex.series} × {ex.repetitions}
+                          </span>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              ))}
 
-      {/* CONTEÚDO */}
-      <main className="flex-1 space-y-6">
-        {/* Cartão de boas-vindas */}
-        <Card className="p-4 sm:p-6 bg-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-3">
-            Olá! <span className="text-2xl">👋</span>
-          </h2>
-          <p className="text-gray-600 mt-2">
-            Aqui tens uma visão geral do teu treino e da tua dieta.
+              <div className="flex justify-end mt-4">
+                <Button 
+                  onClick={() => {
+                    const newCount = updateTrainingStreak();
+                    toast({
+                      title: "Treino Registado",
+                      description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
+                      duration: 3000
+                    });
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <CalendarCheck size={16} className="mr-2" />
+                  Registar treino concluído
+                </Button>
+              </div>
+          </div>
+        </ExpandableCard>
+      ) : (
+        <Card className="p-8 text-center">
+          <div className="flex justify-center mb-3">
+            <Calendar size={32} className="text-blue-500" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-700 mb-2">Dia de Descanso</h3>
+          <p className="text-gray-500">
+            Hoje é o teu dia para recuperação. Aproveita para descansar e preparar-te para o próximo treino!
           </p>
         </Card>
+      )}
 
-        {/* TREINO */}
-        <Card className="p-4 sm:p-6 bg-white space-y-4 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-            <span className="text-green-600">💪</span> Registo Diário de Treino
-          </h2>
-
-          {/* Renderiza os dias com design atualizado */}
-          <div className="w-full overflow-x-auto py-2">
-            <div className="flex space-x-2 whitespace-nowrap">
-              {Object.keys(weeklyPlan).map((day) => {
-                const isSelected = day === selectedDay;
-                const assignedWorkout = weeklyPlan[day];
-                const isRest = assignedWorkout === "Descanso";
-                return (
-                  <Button
-                    key={day}
-                    size="sm"
-                    variant={isSelected ? "default" : "outline"}
-                    className={`min-w-[110px] sm:min-w-[140px] transition-all duration-300 ${
-                      isSelected
-                        ? "bg-green-600 hover:bg-green-700 text-white transform scale-105"
-                        : isRest
-                        ? "bg-gray-50 text-gray-500 hover:bg-gray-100"
-                        : "bg-white text-green-700 border-green-600 hover:bg-green-50"
-                    }`}
-                    onClick={() => setSelectedDay(day as DayOfWeek)}
-                  >
-                    {isRest ? `😴 ${day}` : `🏋️ ${day}`}
-                  </Button>
-                );
-              })}
+      {/* Resumo de Nutrição */}
+      <SectionHeader 
+        title="Meta Nutricional Diária"
+        icon={<Utensils className="text-green-500" size={20} />}
+        description="Distribuição de macronutrientes"
+      />
+      
+      <Card className="p-4">
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="bg-green-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500">Calorias</div>
+              <div className="font-medium flex items-baseline gap-1">
+                <span className="text-lg">{daily.cal.toFixed(0)}</span>
+                <span className="text-xs text-gray-400">kcal</span>
+              </div>
+            </div>
+            
+            <div className="bg-rose-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500">Proteínas</div>
+              <div className="font-medium flex items-baseline gap-1">
+                <span className="text-lg">{daily.p.toFixed(0)}</span>
+                <span className="text-xs text-gray-400">g</span>
+                <span className="text-xs text-rose-500 ml-auto">{protPercent}%</span>
+              </div>
+            </div>
+            
+            <div className="bg-amber-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500">Hidratos</div>
+              <div className="font-medium flex items-baseline gap-1">
+                <span className="text-lg">{daily.c.toFixed(0)}</span>
+                <span className="text-xs text-gray-400">g</span>
+                <span className="text-xs text-amber-500 ml-auto">{carbPercent}%</span>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="text-xs text-gray-500">Gorduras</div>
+              <div className="font-medium flex items-baseline gap-1">
+                <span className="text-lg">{daily.f.toFixed(0)}</span>
+                <span className="text-xs text-gray-400">g</span>
+                <span className="text-xs text-blue-500 ml-auto">{fatPercent}%</span>
+              </div>
             </div>
           </div>
 
-          {/* Renderiza os exercícios do dia selecionado */}
-          {renderExercisesOfSelectedDay()}
-
-          {/* Renderiza os inputs para registo de sets somente se houver dia e exercício selecionados */}
-          {selectedDay && selectedExercise && (
-            <div className="bg-white p-4 rounded-xl border border-gray-200 space-y-4">
-              <div className="flex items-center gap-2 text-green-700 font-medium">
-                <span className="text-lg">📝</span>
-                Registrar Set
+          <div className="bg-white border border-gray-200 rounded-lg p-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="text-sm text-gray-500">Distribuição de macros</div>
+              <div className="flex gap-4 text-sm">
+                <span className="flex items-center gap-1">
+                  <span className="h-3 w-3 bg-rose-400 rounded-full"></span>
+                  <span>Proteínas</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-3 w-3 bg-amber-400 rounded-full"></span>
+                  <span>Hidratos</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-3 w-3 bg-blue-400 rounded-full"></span>
+                  <span>Gorduras</span>
+                </span>
               </div>
+            </div>
+            
+            <div className="mt-2 flex h-4 rounded-full overflow-hidden">
+              <div 
+                className="bg-rose-400" 
+                style={{ width: `${protPercent}%` }}
+              ></div>
+              <div 
+                className="bg-amber-400" 
+                style={{ width: `${carbPercent}%` }}
+              ></div>
+              <div 
+                className="bg-blue-400" 
+                style={{ width: `${fatPercent}%` }}
+              ></div>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm text-gray-600">Repetições</Label>
-                  <Input
-                    type="number"
-                    value={newSetReps}
-                    onChange={(e) => setNewSetReps(Number(e.target.value))}
-                    onFocus={(e) => {
-                      if (Number(e.target.value) === 0) e.target.value = "";
-                    }}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm text-gray-600">Peso (kg)</Label>
-                  <Input
-                    type="number"
-                    value={newSetWeight}
-                    onChange={(e) => setNewSetWeight(Number(e.target.value))}
-                    onFocus={(e) => {
-                      if (Number(e.target.value) === 0) e.target.value = "";
-                    }}
-                    className="mt-1"
-                  />
+          <div className="flex justify-end">
+            <Button 
+              onClick={() => {
+                const newCount = updateDietStreak();
+                toast({
+                  title: "Meta Nutricional Cumprida",
+                  description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
+                  duration: 3000
+                });
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CalendarCheck size={16} className="mr-2" />
+              Registar meta cumprida
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Status & Progresso */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Últimas Medições */}
+        <Card className="p-4 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-gray-700 flex items-center gap-2">
+              <Scale size={18} className="text-green-600" /> Medição mais recente
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {measurements.length} medições
+            </Badge>
+          </div>
+          
+          {lastMeasurement ? (
+            <div className="space-y-3">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100/30 p-3 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-500">Data</span>
+                  <span className="text-sm font-medium">
+                    {new Date(`${lastMeasurement.date}T${lastMeasurement.time || '00:00'}`).toLocaleDateString('pt-PT')}
+                  </span>
                 </div>
               </div>
-
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleSaveSet}
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                  <div className="text-xs text-gray-500">Peso</div>
+                  <div className="font-medium text-gray-800">
+                    {lastMeasurement.weight} kg
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                  <div className="text-xs text-gray-500">IMC</div>
+                  <div className="font-medium text-gray-800 flex items-center gap-1">
+                    {calculateBMI(lastMeasurement.weight, lastMeasurement.height)}
+                    <span className={`text-xs ${getBMICategory(calculateBMI(lastMeasurement.weight, lastMeasurement.height)).color}`}>
+                      ({getBMICategory(calculateBMI(lastMeasurement.weight, lastMeasurement.height)).label})
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                  <div className="text-xs text-gray-500">Massa Muscular</div>
+                  <div className="font-medium text-gray-800 flex items-baseline gap-1">
+                    <span>{lastMeasurement.muscleMassKg} kg</span>
+                    <span className="text-xs text-gray-500">
+                      ({lastMeasurement.muscleMassPercent}%)
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                  <div className="text-xs text-gray-500">Massa Gorda</div>
+                  <div className="font-medium text-gray-800">
+                    {lastMeasurement.fatMassPercent}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-500">
+              <p>Nenhuma medição registada</p>
+              <Button 
+                variant="outline"
+                className="mt-2 text-green-600 border-green-200 hover:bg-green-50"
               >
-                {editSetIndex !== null
-                  ? "💾 Salvar Alteração"
-                  : "➕ Adicionar Set"}
+                Adicionar Primeira Medição
               </Button>
-
-              <div className="mt-4">
-                <h4 className="font-medium text-green-700 flex items-center gap-2 mb-3">
-                  <span className="text-lg">📊</span>
-                  Sets de Hoje
-                </h4>
-                {renderSetsOfSelectedExercise()}
-              </div>
             </div>
           )}
         </Card>
-
-        {/* DIETA */}
-        <Card className="p-4 sm:p-6 bg-white space-y-4 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-100">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-            <span className="text-green-600">🍎</span> Plano Alimentar
-          </h2>
-          <p className="text-sm text-gray-600">
-            Clica num prato para ver os produtos e totais de macros.
-          </p>
-          <div>{renderDietPlan()}</div>
+        
+        {/* Status de Treino */}
+        <Card className="p-4 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-medium text-gray-700 flex items-center gap-2">
+              <Dumbbell size={18} className="text-green-600" /> Estado do Treino
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {weeklyTrainingCount}/7 dias
+            </Badge>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="bg-gradient-to-r from-green-50 to-green-100/30 p-3 rounded-lg">
+              <div className="text-xs text-gray-500 mb-1">Frequência de treinos</div>
+              <div className="flex gap-1">
+                {['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'].map((day, i) => (
+                  <div 
+                    key={i} 
+                    className={`flex-1 h-8 rounded-md flex items-center justify-center text-xs ${
+                      weeklyPlan && weeklyPlan[day] && weeklyPlan[day] !== 'Descanso' 
+                        ? 'bg-green-200 text-green-800' 
+                        : 'bg-gray-100 text-gray-400'
+                    } ${currentDayOfWeek === day ? 'ring-2 ring-green-500 ring-offset-1' : ''}`}
+                    title={day}
+                  >
+                    {day.charAt(0)}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                <div className="text-xs text-gray-500">Treinos registados</div>
+                <div className="font-medium text-gray-800">
+                  {trainingLogs?.length || 0} registos
+                </div>
+              </div>
+              
+              <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                <div className="text-xs text-gray-500">Exercícios cadastrados</div>
+                <div className="font-medium text-gray-800">
+                  {exercises?.length || 0} exercícios
+                </div>
+              </div>
+            </div>
+            
+            {trainingStats && (
+              <div className="bg-white border border-gray-200 p-3 rounded-lg">
+                <div className="text-xs text-gray-500">Último treino registado</div>
+                <div className="font-medium text-gray-800 flex flex-col">
+                  <span>{trainingStats.lastWorkoutName}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(trainingStats.lastTrainingDate).toLocaleDateString('pt-PT')}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
-      </main>
+      </div>
     </div>
   );
 }
