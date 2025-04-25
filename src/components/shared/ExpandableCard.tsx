@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
 
 interface ExpandableCardProps {
-  title: string;
-  subtitle?: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
   icon?: React.ReactNode;
   children: React.ReactNode;
   defaultExpanded?: boolean;

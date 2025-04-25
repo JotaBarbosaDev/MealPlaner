@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from "react";
 import { CalendarDays, Clock, ChevronDown, ChevronUp, Edit, Trash } from "lucide-react";
-import { Exercise, WorkoutLog } from "@/types/treino";
+import { Exercise } from "@/types/treino";
 import { useToast } from "@/hooks/use-toast";
 
 // UI do shadcn
@@ -12,6 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+// Definição do tipo WorkoutLog interno (já que não está disponível em types/treino.ts)
+interface WorkoutLog {
+  exercise: string;
+  date: string;
+  duration: number;
+  notes?: string;
+}
 
 interface WorkoutLogsProps {
   exercises: Exercise[];
@@ -30,7 +38,7 @@ export function WorkoutLogs({ exercises, workoutLogs, setWorkoutLogs }: WorkoutL
 
   // Estado para visualização expandida dos logs
   const [expandedLogs, setExpandedLogs] = useState<number[]>([]);
-  
+
   // Usando o toast do ShadcnUI
   const { toast } = useToast();
 

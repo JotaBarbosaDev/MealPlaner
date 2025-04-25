@@ -7,4 +7,5 @@ export interface Streak {
 export interface UserStreaks {
   diet: Streak;
   training: Streak;
+  measurements: Streak; // Nova adição para acompanhar sequência de medições
 }
