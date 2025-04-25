@@ -5,6 +5,8 @@ export interface NutritionalInfo {
   fat: number;
 }
 
+export type MealName = "Pequeno-Almoço" | "Almoço" | "Lanche da Tarde" | "Jantar";
+
 export interface Product {
   id: string;
   name: string;
@@ -23,12 +25,12 @@ export interface Plate {
   id: string;
   name: string;
   items: PlateItem[];
+  mealType: MealName; // Tornando obrigatório para melhor tipagem
 }
 
 export interface Meal {
   id: string;
   name: string;
-  time: string;
   plates: Plate[];
 }
 

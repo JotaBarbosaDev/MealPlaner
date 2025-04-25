@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import localFont from "next/font/local";
+import { Toaster } from "@/components/ui/toaster";
 
 // Fontes locais para melhor desempenho
 const geistSans = localFont({
@@ -40,6 +41,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen`}
       >
         {children}
+        <Toaster />
       </body>
     </html>
   );

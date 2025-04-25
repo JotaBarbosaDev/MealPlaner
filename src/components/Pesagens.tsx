@@ -15,7 +15,10 @@ import {
   PlusCircle,
   Edit,
   Trash,
-  Settings
+  Settings,
+  ChevronUp,
+  ChevronDown,
+  Clock
 } from "lucide-react";
 
 // Componentes compartilhados
@@ -34,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
@@ -286,9 +290,10 @@ export default function Pesagens() {
 
       {/* Resumo / Estatísticas */}
       {measurements.length > 0 && (
-        <Card className="p-4 space-y-4">
-          <h3 className="font-medium text-gray-700 flex items-center gap-2">
-            <BarChart3 size={20} className="text-green-600" /> Resumo de Evolução
+        <Card className="p-5 bg-gradient-to-br from-white to-blue-50/30 border-blue-100 shadow-sm">
+          <h3 className="font-medium text-gray-800 flex items-center gap-2 mb-4">
+            <BarChart3 size={20} className="text-blue-600" /> 
+            Resumo de Evolução
           </h3>
 
           <div className="flex flex-wrap gap-3">
@@ -334,17 +339,18 @@ export default function Pesagens() {
           </div>
 
           {bmiTrend && (
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm mt-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-700">
+                <h4 className="font-medium text-gray-800 flex items-center gap-2">
+                  <Activity size={18} className="text-blue-600" />
                   Evolução do IMC
                 </h4>
                 <Badge variant="outline" className={
                   bmiTrend.diff === 0 
-                    ? "bg-blue-50 text-blue-600" 
+                    ? "bg-blue-50 text-blue-600 border-blue-200" 
                     : bmiTrend.diff < 0 
-                      ? "bg-green-50 text-green-600" 
-                      : "bg-amber-50 text-amber-600"
+                      ? "bg-green-50 text-green-600 border-green-200" 
+                      : "bg-amber-50 text-amber-600 border-amber-200"
                 }>
                   {bmiTrend.diff === 0 
                     ? "Mantendo" 
@@ -355,28 +361,34 @@ export default function Pesagens() {
               </div>
               
               <div className="mt-3 flex items-center justify-between text-sm">
-                <div>
+                <div className="bg-gray-50 px-3 py-1.5 rounded-lg">
                   <span className="text-gray-500">Inicial: </span>
                   <span className="font-medium">{bmiTrend.first}</span>
                   <span className="ml-2 text-xs text-gray-500">
                     ({getBMICategory(bmiTrend.first).label})
                   </span>
                 </div>
-                <div>
+                <div className="bg-blue-50 px-3 py-1.5 rounded-lg">
                   <span className="text-gray-500">Atual: </span>
                   <span className="font-medium">{bmiTrend.last}</span>
                   <span className={`ml-2 text-xs ${getBMICategory(bmiTrend.last).color}`}>
                     ({getBMICategory(bmiTrend.last).label})
                   </span>
                 </div>
-                <div>
+                <div className={
+                  bmiTrend.diff === 0 
+                    ? "bg-blue-50 px-3 py-1.5 rounded-lg" 
+                    : bmiTrend.diff < 0 
+                      ? "bg-green-50 px-3 py-1.5 rounded-lg" 
+                      : "bg-amber-50 px-3 py-1.5 rounded-lg"
+                }>
                   <span className="text-gray-500">Diferença: </span>
                   <span className={
                     bmiTrend.diff === 0 
-                      ? "text-blue-600" 
+                      ? "text-blue-600 font-medium" 
                       : bmiTrend.diff < 0 
-                        ? "text-green-600" 
-                        : "text-amber-600"
+                        ? "text-green-600 font-medium" 
+                        : "text-amber-600 font-medium"
                   }>
                     {bmiTrend.diff > 0 ? `+${bmiTrend.diff}` : bmiTrend.diff}
                   </span>
@@ -389,11 +401,11 @@ export default function Pesagens() {
 
       {/* Controles & Filtros */}
       {measurements.length > 0 && (
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              className={sortOrder === "desc" ? "bg-green-50 border-green-200" : ""}
+              className={sortOrder === "desc" ? "bg-blue-50 border-blue-200 text-blue-700" : ""}
               size="sm"
               onClick={() => setSortOrder("desc")}
             >
@@ -401,7 +413,7 @@ export default function Pesagens() {
             </Button>
             <Button
               variant="outline"
-              className={sortOrder === "asc" ? "bg-green-50 border-green-200" : ""}
+              className={sortOrder === "asc" ? "bg-blue-50 border-blue-200 text-blue-700" : ""}
               size="sm"
               onClick={() => setSortOrder("asc")}
             >
@@ -412,9 +424,13 @@ export default function Pesagens() {
             variant="ghost"
             size="sm"
             onClick={() => setShowDetails(!showDetails)}
-            className={showDetails ? "text-green-600" : ""}
+            className={showDetails ? "text-blue-600 flex items-center gap-1" : "flex items-center gap-1"}
           >
-            {showDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+            {showDetails ? (
+              <>Ocultar detalhes <ChevronUp size={16} /></>
+            ) : (
+              <>Mostrar detalhes <ChevronDown size={16} /></>
+            )}
           </Button>
         </div>
       )}
@@ -422,13 +438,13 @@ export default function Pesagens() {
       {/* Lista de Medições */}
       <div className="space-y-4">
         {measurements.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Weight size={48} className="text-blue-600 mx-auto mb-3" />
+          <Card className="p-8 text-center bg-white border-blue-100">
+            <Weight size={48} className="text-blue-600 mx-auto mb-3 opacity-80" />
             <h3 className="text-lg font-medium text-gray-700 mb-2">Nenhuma medição registrada</h3>
             <p className="text-gray-500 mb-4">Comece a registrar suas medidas para acompanhar seu progresso.</p>
             <Button
               onClick={openAddDialog}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Adicionar Primeira Medição
             </Button>
@@ -473,135 +489,156 @@ export default function Pesagens() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <ExpandableCard
-                  title={formattedDate}
-                  subtitle={`${formattedTime} - ${measurement.weight} kg`}
-                  icon={<Weight size={18} className="text-blue-600" />}
-                  defaultExpanded={index === 0}
-                  actions={
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-green-600 hover:bg-green-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditDialog(measurements.indexOf(measurement));
-                        }}
-                      >
-                        <Edit size={16} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteMeasurement(measurements.indexOf(measurement));
-                        }}
-                      >
-                        <Trash size={16} />
-                      </Button>
-                    </>
-                  }
-                >
-                  <div className="space-y-4">
-                    {/* Principais métricas */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500">Peso</div>
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">{measurement.weight} kg</div>
-                          {hasPrevious && (
-                            <Badge variant="outline" className={
-                              weightDiff === 0 
-                                ? "bg-gray-50" 
-                                : weightDiff < 0 
-                                  ? "bg-green-50 text-green-600" 
-                                  : "bg-amber-50 text-amber-600"
-                            }>
-                              {weightDiff > 0 ? `+${weightDiff}` : weightDiff}
-                            </Badge>
-                          )}
-                        </div>
+                <Card className={`overflow-hidden border ${index === 0 ? "border-blue-200" : "border-gray-100"} hover:border-blue-200 transition-all duration-200 shadow-sm hover:shadow-md`}>
+                  <ExpandableCard
+                    title={
+                      <div className="font-medium text-gray-800">
+                        {formattedDate}
+                        {index === 0 && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Mais recente</span>}
                       </div>
-                      
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500">Massa Muscular</div>
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">{measurement.muscleMassKg} kg</div>
-                          {hasPrevious && (
-                            <Badge variant="outline" className={
-                              muscleDiff === 0 
-                                ? "bg-gray-50" 
-                                : muscleDiff > 0 
-                                  ? "bg-green-50 text-green-600" 
-                                  : "bg-amber-50 text-amber-600"
-                            }>
-                              {muscleDiff > 0 ? `+${muscleDiff}` : muscleDiff}
-                            </Badge>
-                          )}
-                        </div>
+                    }
+                    subtitle={
+                      <div className="flex items-center text-gray-500">
+                        <Clock size={14} className="mr-1" /> {formattedTime} 
+                        <span className="mx-2">•</span> 
+                        <Weight size={14} className="mr-1" /> {measurement.weight} kg
                       </div>
-                      
-                      <div className="bg-amber-50 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500">Gordura (%)</div>
-                        <div className="flex items-center justify-between">
-                          <div className="font-medium">{measurement.fatMassPercent}%</div>
-                          {hasPrevious && (
-                            <Badge variant="outline" className={
-                              fatDiff === 0 
-                                ? "bg-gray-50" 
-                                : fatDiff < 0 
-                                  ? "bg-green-50 text-green-600" 
-                                  : "bg-amber-50 text-amber-600"
-                            }>
-                              {fatDiff > 0 ? `+${fatDiff}` : fatDiff}
-                            </Badge>
-                          )}
+                    }
+                    icon={<Weight size={18} className={`${index === 0 ? "text-blue-600" : "text-gray-600"}`} />}
+                    defaultExpanded={index === 0}
+                    actions={
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditDialog(measurements.indexOf(measurement));
+                          }}
+                        >
+                          <Edit size={16} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteMeasurement(measurements.indexOf(measurement));
+                          }}
+                        >
+                          <Trash size={16} />
+                        </Button>
+                      </>
+                    }
+                  >
+                    <div className="space-y-4 p-2 pt-4">
+                      {/* Principais métricas */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                          <div className="text-xs text-gray-500 flex items-center mb-1">
+                            <Weight size={12} className="mr-1 text-blue-600" /> Peso
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">{measurement.weight} kg</div>
+                            {hasPrevious && (
+                              <Badge variant="outline" className={
+                                weightDiff === 0 
+                                  ? "bg-gray-50 border-gray-200" 
+                                  : weightDiff < 0 
+                                    ? "bg-green-50 text-green-600 border-green-200" 
+                                    : "bg-amber-50 text-amber-600 border-amber-200"
+                              }>
+                                {weightDiff > 0 ? `+${weightDiff}` : weightDiff}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500">IMC</div>
-                        <div className="flex flex-col">
-                          <div className="font-medium">{bmi}</div>
-                          <div className={`text-xs ${bmiCategory.color}`}>
-                            {bmiCategory.label}
+                        
+                        <div className="bg-green-50 p-3 rounded-lg border border-green-100">
+                          <div className="text-xs text-gray-500 flex items-center mb-1">
+                            <Activity size={12} className="mr-1 text-green-600" /> Massa Muscular
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">{measurement.muscleMassKg} kg</div>
+                            {hasPrevious && (
+                              <Badge variant="outline" className={
+                                muscleDiff === 0 
+                                  ? "bg-gray-50 border-gray-200" 
+                                  : muscleDiff > 0 
+                                    ? "bg-green-50 text-green-600 border-green-200" 
+                                    : "bg-amber-50 text-amber-600 border-amber-200"
+                              }>
+                                {muscleDiff > 0 ? `+${muscleDiff}` : muscleDiff}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
+                          <div className="text-xs text-gray-500 flex items-center mb-1">
+                            <Activity size={12} className="mr-1 text-amber-600" /> Gordura
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">{measurement.fatMassPercent}%</div>
+                            {hasPrevious && (
+                              <Badge variant="outline" className={
+                                fatDiff === 0 
+                                  ? "bg-gray-50 border-gray-200" 
+                                  : fatDiff < 0 
+                                    ? "bg-green-50 text-green-600 border-green-200" 
+                                    : "bg-amber-50 text-amber-600 border-amber-200"
+                              }>
+                                {fatDiff > 0 ? `+${fatDiff}` : fatDiff}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                          <div className="text-xs text-gray-500 flex items-center mb-1">
+                            <Activity size={12} className="mr-1 text-gray-600" /> IMC
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="font-medium">{bmi}</div>
+                            <div className={`text-xs ${bmiCategory.color} font-medium`}>
+                              {bmiCategory.label}
+                            </div>
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Detalhes adicionais (opcional) */}
+                      {showDetails && (
+                        <div className="mt-2 pt-3 border-t border-gray-100">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 text-sm">
+                            <div className="bg-white p-2 rounded-md">
+                              <span className="text-xs text-gray-500 block">Altura:</span>{" "}
+                              <span className="font-medium">{measurement.height} cm</span>
+                            </div>
+                            <div className="bg-white p-2 rounded-md">
+                              <span className="text-xs text-gray-500 block">Músculo (%):</span>{" "}
+                              <span className="font-medium">{measurement.muscleMassPercent}%</span>
+                            </div>
+                            <div className="bg-white p-2 rounded-md">
+                              <span className="text-xs text-gray-500 block">Água (%):</span>{" "}
+                              <span className="font-medium">{measurement.waterPercent}%</span>
+                            </div>
+                            <div className="bg-white p-2 rounded-md">
+                              <span className="text-xs text-gray-500 block">Gordura visceral:</span>{" "}
+                              <span className="font-medium">{measurement.visceralFat}</span>
+                            </div>
+                            <div className="bg-white p-2 rounded-md">
+                              <span className="text-xs text-gray-500 block">Idade metabólica:</span>{" "}
+                              <span className="font-medium">{measurement.metabolicAge} anos</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Detalhes adicionais (opcional) */}
-                    {showDetails && (
-                      <div className="mt-2 pt-3 border-t border-gray-100">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 text-sm">
-                          <div>
-                            <span className="text-gray-500">Altura:</span>{" "}
-                            <span className="font-medium">{measurement.height} cm</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Músculo (%):</span>{" "}
-                            <span className="font-medium">{measurement.muscleMassPercent}%</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Água (%):</span>{" "}
-                            <span className="font-medium">{measurement.waterPercent}%</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Gordura visceral:</span>{" "}
-                            <span className="font-medium">{measurement.visceralFat}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Idade metabólica:</span>{" "}
-                            <span className="font-medium">{measurement.metabolicAge} anos</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </ExpandableCard>
+                  </ExpandableCard>
+                </Card>
               </motion.div>
             );
           })
@@ -612,151 +649,179 @@ export default function Pesagens() {
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl flex items-center gap-2">
-              <Weight size={20} className="text-green-600" />
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Weight size={20} className="text-blue-600" />
               {editingIndex !== undefined ? "Editar" : "Nova"} Medição
             </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Registre com precisão os dados da sua medição corporal.
+            </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleSaveMeasurement} className="space-y-5">
             {/* Data e hora */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="date">Data</Label>
+                <Label htmlFor="date" className="text-sm text-gray-700 flex items-center gap-1">
+                  <Calendar size={14} className="text-blue-600" /> Data
+                </Label>
                 <Input
                   id="date"
                   type="date"
                   value={formDate}
                   onChange={(e) => setFormDate(e.target.value)}
+                  className="bg-white/90"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="time">Hora</Label>
+                <Label htmlFor="time" className="text-sm text-gray-700 flex items-center gap-1">
+                  <Clock size={14} className="text-blue-600" /> Hora
+                </Label>
                 <Input
                   id="time"
                   type="time"
                   value={formTime}
                   onChange={(e) => setFormTime(e.target.value)}
+                  className="bg-white/90"
                 />
               </div>
             </div>
 
             {/* Medidas primárias */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100/30 p-4 rounded-xl space-y-4">
-              <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <Weight size={18} className="text-blue-600" /> Dados Principais
-              </h3>
+            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-700">Dados Principais</h3>
+                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                  <Weight size={14} className="text-gray-400" />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="weight">Peso (kg)</Label>
+                  <Label htmlFor="weight" className="text-sm text-gray-600 flex items-center gap-2">
+                    <Weight size={14} className="text-gray-500" />
+                    Peso (kg)
+                  </Label>
                   <Input
                     id="weight"
                     type="number"
                     step="0.1"
                     value={formWeight}
                     onChange={(e) => setFormWeight(+e.target.value)}
-                    className="bg-white/80"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="height">Altura (cm)</Label>
+                  <Label htmlFor="height" className="text-sm text-gray-600 flex items-center gap-2">
+                    <Activity size={14} className="text-gray-500" />
+                    Altura (cm)
+                  </Label>
                   <Input
                     id="height"
                     type="number"
                     step="0.1"
                     value={formHeight}
                     onChange={(e) => setFormHeight(+e.target.value)}
-                    className="bg-white/80"
                   />
                 </div>
               </div>
             </div>
-              
+            
             {/* Composição corporal */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100/30 p-4 rounded-xl space-y-4">
-              <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <Activity size={18} className="text-green-600" /> Composição Corporal
-              </h3>
+            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-700">Composição Corporal</h3>
+                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                  <Activity size={14} className="text-gray-400" />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="muscleMassPercent">Massa Muscular (%)</Label>
+                  <Label htmlFor="muscleMassPercent" className="text-sm text-gray-600">
+                    Massa Muscular (%)
+                  </Label>
                   <Input
                     id="muscleMassPercent"
                     type="number"
                     step="0.1"
                     value={formMuscleMassPercent}
                     onChange={handleMuscleMassPercentChange}
-                    className="bg-white/80"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="muscleMassKg">Massa Muscular (kg)</Label>
+                  <Label htmlFor="muscleMassKg" className="text-sm text-gray-600">
+                    Massa Muscular (kg)
+                  </Label>
                   <Input
                     id="muscleMassKg"
                     type="number"
                     step="0.1"
                     value={formMuscleMassKg}
                     onChange={handleMuscleMassKgChange}
-                    className="bg-white/80"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fatMassPercent">Massa Gorda (%)</Label>
+                  <Label htmlFor="fatMassPercent" className="text-sm text-gray-600">
+                    Massa Gorda (%)
+                  </Label>
                   <Input
                     id="fatMassPercent"
                     type="number"
                     step="0.1"
                     value={formFatMassPercent}
                     onChange={(e) => setFormFatMassPercent(+e.target.value)}
-                    className="bg-white/80"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="waterPercent">Água Corporal (%)</Label>
+                  <Label htmlFor="waterPercent" className="text-sm text-gray-600">
+                    Água Corporal (%)
+                  </Label>
                   <Input
                     id="waterPercent"
                     type="number"
                     step="0.1"
                     value={formWaterPercent}
                     onChange={(e) => setFormWaterPercent(+e.target.value)}
-                    className="bg-white/80"
                   />
                 </div>
               </div>
             </div>
-              
+            
             {/* Dados metabólicos */}
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100/30 p-4 rounded-xl space-y-4">
-              <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <FlaskConical size={18} className="text-amber-600" /> Dados Metabólicos
-              </h3>
+            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-700">Dados Metabólicos</h3>
+                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                  <FlaskConical size={14} className="text-gray-400" />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="visceralFat">Gordura Visceral</Label>
+                  <Label htmlFor="visceralFat" className="text-sm text-gray-600">
+                    Gordura Visceral
+                  </Label>
                   <Input
                     id="visceralFat"
                     type="number"
                     step="0.1"
                     value={formVisceralFat}
                     onChange={(e) => setFormVisceralFat(+e.target.value)}
-                    className="bg-white/80"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="metabolicAge">Idade Metabólica</Label>
+                  <Label htmlFor="metabolicAge" className="text-sm text-gray-600">
+                    Idade Metabólica
+                  </Label>
                   <Input
                     id="metabolicAge"
                     type="number"
                     value={formMetabolicAge}
                     onChange={(e) => setFormMetabolicAge(+e.target.value)}
-                    className="bg-white/80"
                   />
                 </div>
               </div>
             </div>
             
             {/* IMC Calculado */}
-            <div className="bg-white p-4 border border-gray-200 rounded-lg">
+            <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium text-gray-700">IMC Calculado</h4>

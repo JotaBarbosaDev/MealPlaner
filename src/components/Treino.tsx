@@ -2,8 +2,8 @@
 
 import React, { FormEvent, useState } from "react";
 import useLocalStorage from "use-local-storage";
-import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Dumbbell, 
   Calendar, 
@@ -168,9 +168,12 @@ export default function Treino() {
 
   // Adicionar estado para exercícios expandidos após os outros estados
   const [expandedExercises, setExpandedExercises] = useState<number[]>([]);
-  
+
   // Estado para controlar animações de seções
   const [activeTab, setActiveTab] = useState<"exercises" | "workouts" | "weekly">("exercises");
+
+  // Utilizando o toast do ShadcnUI ao invés do react-toastify
+  const { toast } = useToast();
 
   /* =============================
      2) FUNÇÕES Exercícios
@@ -178,7 +181,11 @@ export default function Treino() {
   function handleAddExerciseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!exerciseName.trim()) {
-      toast("Preencha todos os campos corretamente.");
+      toast({
+        title: "Campos incompletos",
+        description: "Preencha todos os campos corretamente.",
+        variant: "destructive"
+      });
       return;
     }
     const exercise: Exercise = {
@@ -190,7 +197,12 @@ export default function Treino() {
     setExercises([...exercises, exercise]);
     clearExerciseFields();
     setExerciseDialogOpen(false);
-    toast("Exercício adicionado com sucesso!");
+    toast({
+      title: "Exercício adicionado",
+      description: `${exerciseName} foi adicionado com sucesso!`,
+      variant: "default",
+      className: "bg-green-50 border-green-200 text-green-700"
+    });
   }
 
   function handleEditExerciseClick(index: number) {
@@ -207,7 +219,11 @@ export default function Treino() {
     e.preventDefault();
     if (editExerciseIndex === undefined) return;
     if (!exerciseName.trim()) {
-      toast("Preencha todos os campos corretamente.");
+      toast({
+        title: "Campos incompletos",
+        description: "Preencha todos os campos corretamente.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -243,14 +259,25 @@ export default function Treino() {
     clearExerciseFields();
     setEditExerciseIndex(undefined);
     setExerciseDialogOpen(false);
-    toast("Exercício editado com sucesso!");
+    toast({
+      title: "Exercício atualizado",
+      description: `${exerciseName} foi atualizado com sucesso!`,
+      variant: "default",
+      className: "bg-green-50 border-green-200 text-green-700"
+    });
   }
 
   function handleDeleteExercise(index: number) {
     const newExercises = [...exercises];
+    const exerciseName = newExercises[index].name;
     newExercises.splice(index, 1);
     setExercises(newExercises);
-    toast("Exercício apagado!");
+    toast({
+      title: "Exercício removido",
+      description: `${exerciseName} foi removido com sucesso.`,
+      variant: "default",
+      className: "bg-red-50 border-red-200 text-red-700"
+    });
   }
 
   function clearExerciseFields() {
@@ -266,11 +293,19 @@ export default function Treino() {
   function handleAddWorkoutSubmit(e: FormEvent) {
     e.preventDefault();
     if (!workoutName.trim()) {
-      toast("Preencha o nome do treino.");
+      toast({
+        title: "Nome obrigatório",
+        description: "Preencha o nome do treino.",
+        variant: "destructive"
+      });
       return;
     }
     if (selectedExercises.length === 0) {
-      toast("Selecione pelo menos um exercício.");
+      toast({
+        title: "Exercícios necessários", 
+        description: "Selecione pelo menos um exercício.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -282,7 +317,12 @@ export default function Treino() {
     setWorkouts([...workouts, workout]);
     clearWorkoutFields();
     setWorkoutDialogOpen(false);
-    toast("Treino adicionado com sucesso!");
+    toast({
+      title: "Treino adicionado",
+      description: `${workoutName} foi criado com sucesso!`,
+      variant: "default",
+      className: "bg-green-50 border-green-200 text-green-700"
+    });
   }
 
   function handleEditWorkoutClick(index: number) {
@@ -298,11 +338,17 @@ export default function Treino() {
     e.preventDefault();
     if (editWorkoutIndex === undefined) return;
     if (!workoutName.trim()) {
-      toast("Preencha o nome do treino.");
+      toast({
+        title: "Preencha o nome do treino.",
+        variant: "destructive"
+      });
       return;
     }
     if (selectedExercises.length === 0) {
-      toast("Selecione pelo menos um exercício.");
+      toast({
+        title: "Selecione pelo menos um exercício.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -315,14 +361,25 @@ export default function Treino() {
     clearWorkoutFields();
     setEditWorkoutIndex(undefined);
     setWorkoutDialogOpen(false);
-    toast("Treino editado com sucesso!");
+    toast({
+      title: "Treino editado",
+      description: `${workoutName} foi atualizado com sucesso!`,
+      variant: "default",
+      className: "bg-green-50 border-green-200 text-green-700"
+    });
   }
 
   function handleDeleteWorkout(index: number) {
     const newWorkouts = [...workouts];
+    const workoutName = newWorkouts[index].name;
     newWorkouts.splice(index, 1);
     setWorkouts(newWorkouts);
-    toast("Treino apagado!");
+    toast({
+      title: "Treino removido",
+      description: `${workoutName} foi removido com sucesso.`,
+      variant: "default",
+      className: "bg-red-50 border-red-200 text-red-700"
+    });
   }
 
   function clearWorkoutFields() {
@@ -420,17 +477,29 @@ export default function Treino() {
   ============================== */
   function handleSaveSet() {
     if (!currentExercise || !selectedDay) {
-      toast("Selecione dia e exercício.");
+      toast({
+        title: "Campos incompletos", 
+        description: "Selecione dia e exercício.",
+        variant: "destructive"
+      });
       return;
     }
     if (newSetReps <= 0 || newSetWeight < 0) {
-      toast("Valores inválidos para repetições/peso.");
+      toast({
+        title: "Valores inválidos",
+        description: "Valores inválidos para repetições/peso.",
+        variant: "destructive"
+      });
       return;
     }
 
     const assignedWorkout = weeklyPlan[selectedDay];
     if (!assignedWorkout || assignedWorkout === "Descanso") {
-      toast("Não há treino neste dia!");
+      toast({
+        title: "Dia de descanso",
+        description: "Não há treino neste dia!",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -486,11 +555,14 @@ export default function Treino() {
     }
     setTrainingLogs(updatedLogs);
 
-    toast(
-      editSetIndex !== null
+    toast({
+      title: editSetIndex !== null ? "Set editado" : "Set registrado",
+      description: editSetIndex !== null
         ? "Set editado com sucesso!"
-        : "Set adicionado ao registo de hoje!"
-    );
+        : "Set adicionado ao registo de hoje!",
+      variant: "default",
+      className: "bg-green-50 border-green-200 text-green-700"
+    });
 
     // Reset
     setNewSetReps(0);
@@ -718,9 +790,9 @@ export default function Treino() {
   const renderTabs = () => (
     <div className="flex space-x-1 p-1 bg-gray-100 rounded-lg mb-6">
       {[
-        { id: "exercises", label: "Exercícios", icon: <ActivitySquare size={18} className="text-green-600" /> },
-        { id: "workouts", label: "Treinos", icon: <Dumbbell size={18} className="text-blue-600" /> },
-        { id: "weekly", label: "Plano Semanal", icon: <Calendar size={18} className="text-amber-600" /> }
+        { id: "exercises", label: "Exercícios", icon: <ActivitySquare size={18} className={activeTab === "exercises" ? "text-white" : "text-green-600"} /> },
+        { id: "workouts", label: "Treinos", icon: <Dumbbell size={18} className={activeTab === "workouts" ? "text-white" : "text-blue-600"} /> },
+        { id: "weekly", label: "Plano Semanal", icon: <Calendar size={18} className={activeTab === "weekly" ? "text-white" : "text-amber-600"} /> }
       ].map((tab) => (
         <Button 
           key={tab.id}
@@ -734,6 +806,25 @@ export default function Treino() {
       ))}
     </div>
   );
+
+  // Função para obter o emoji apropriado para o exercício
+  const getExerciseEmoji = (exerciseName: string) => {
+    const nameLower = exerciseName.toLowerCase();
+    
+    if (nameLower.includes("supino")) return "🏋️";
+    if (nameLower.includes("agacha") || nameLower.includes("leg") || nameLower.includes("squat")) return "🦵";
+    if (nameLower.includes("rosca") || nameLower.includes("bíceps") || nameLower.includes("curl")) return "💪";
+    if (nameLower.includes("ombro") || nameLower.includes("shoulder")) return "🧍";
+    if (nameLower.includes("peito") || nameLower.includes("chest")) return "⚡";
+    if (nameLower.includes("costa") || nameLower.includes("back") || nameLower.includes("dorsal")) return "🔙";
+    if (nameLower.includes("abdom") || nameLower.includes("abs")) return "🧠";
+    if (nameLower.includes("corrid") || nameLower.includes("run")) return "🏃";
+    if (nameLower.includes("corda") || nameLower.includes("pular")) return "⏱️";
+    if (nameLower.includes("cardio")) return "❤️";
+    
+    // Emoji padrão para outros exercícios
+    return "🏆";
+  };
 
   return (
     <div className="space-y-6">
@@ -810,7 +901,7 @@ export default function Treino() {
                   <ExpandableCard
                     key={i}
                     title={ex.name}
-                    icon="💪"
+                    icon={getExerciseEmoji(ex.name)}
                     defaultExpanded={expandedExercises.includes(i)}
                     actions={
                       <>
@@ -823,7 +914,7 @@ export default function Treino() {
                             handleEditExerciseClick(i);
                           }}
                         >
-                          ✏️
+                          <Edit size={16} />
                         </Button>
                         <Button
                           variant="ghost"
@@ -834,23 +925,23 @@ export default function Treino() {
                             handleDeleteExercise(i);
                           }}
                         >
-                          🗑️
+                          <Trash size={16} />
                         </Button>
                       </>
                     }
                   >
                     <div className="grid gap-4">
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        <span className="flex items-center gap-1 bg-green-50 px-3 py-1 rounded-full">
+                      <div className="flex flex-wrap gap-3 text-sm">
+                        <span className="flex items-center gap-1 bg-green-50 px-3 py-1 rounded-lg border border-green-100">
                           <Repeat size={16} className="text-green-600" />
                           {ex.series} séries
                         </span>
-                        <span className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-full">
-                          <Target size={16} className="text-amber-600" />
+                        <span className="flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
+                          <Target size={16} className="text-blue-600" />
                           {ex.repetitions} repetições
                         </span>
-                        <span className="flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full">
-                          <Timer size={16} className="text-blue-600" />
+                        <span className="flex items-center gap-1 bg-amber-50 px-3 py-1 rounded-lg border border-amber-100">
+                          <Timer size={16} className="text-amber-600" />
                           {ex.pause}s pausa
                         </span>
                       </div>
@@ -929,7 +1020,7 @@ export default function Treino() {
                               handleEditWorkoutClick(i);
                             }}
                           >
-                            ✏️
+                            <Edit size={16} />
                           </Button>
                           <Button
                             variant="ghost"
@@ -940,7 +1031,7 @@ export default function Treino() {
                               handleDeleteWorkout(i);
                             }}
                           >
-                            🗑️
+                            <Trash size={16} />
                           </Button>
                         </>
                       }
@@ -956,17 +1047,21 @@ export default function Treino() {
                                   initial={{ opacity: 0, y: 5 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: j * 0.05 }}
-                                  className="bg-gray-50 rounded-lg p-3 flex justify-between items-center"
+                                  className="bg-gray-50 rounded-lg p-3 flex justify-between items-center border border-gray-100 hover:border-green-200 hover:bg-white transition-all duration-200"
                                 >
                                   <div className="flex items-center gap-3">
-                                    <span className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
+                                    <span className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
                                       {j+1}
                                     </span>
-                                    <span className="text-gray-700">{ex.name}</span>
+                                    <div>
+                                      <span className="text-gray-700 font-medium flex items-center gap-2">
+                                        {getExerciseEmoji(ex.name)} {ex.name}
+                                      </span>
+                                      <span className="text-xs text-gray-500">
+                                        {ex.series} séries x {ex.repetitions} repetições • {ex.pause}s pausa
+                                      </span>
+                                    </div>
                                   </div>
-                                  <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-100">
-                                    {ex.series}x{ex.repetitions}
-                                  </span>
                                 </motion.div>
                               );
                             })
@@ -976,17 +1071,21 @@ export default function Treino() {
                                 initial={{ opacity: 0, y: 5 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: j * 0.05 }}
-                                className="bg-gray-50 rounded-lg p-3 flex justify-between items-center"
+                                className="bg-gray-50 rounded-lg p-3 flex justify-between items-center border border-gray-100 hover:border-green-200 hover:bg-white transition-all duration-200"
                               >
                                 <div className="flex items-center gap-3">
-                                  <span className="h-7 w-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
+                                  <span className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-medium">
                                     {j+1}
                                   </span>
-                                  <span className="text-gray-700">{ex.name}</span>
+                                  <div>
+                                    <span className="text-gray-700 font-medium flex items-center gap-2">
+                                      {getExerciseEmoji(ex.name)} {ex.name}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {ex.series} séries x {ex.repetitions} repetições • {ex.pause}s pausa
+                                    </span>
+                                  </div>
                                 </div>
-                                <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full border border-gray-100">
-                                  {ex.series}x{ex.repetitions}
-                                </span>
                               </motion.div>
                             ))}
                       </div>
@@ -1059,21 +1158,25 @@ export default function Treino() {
                 value={exerciseName}
                 onChange={(e) => setExerciseName(e.target.value)}
                 placeholder="Ex: Supino Reto"
-                className="bg-white/80 backdrop-blur-sm"
+                className="bg-white/90"
               />
             </div>
 
             {/* Grid de Configurações */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
-              <h3 className="font-medium text-gray-700 flex items-center gap-2">
-                <span className="text-green-600">⚙️</span> Configurações
-              </h3>
+            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-700">Configurações</h3>
+                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                  <Settings size={14} className="text-gray-400" />
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Séries */}
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-green-600">🔄</span> Séries
+                  <Label className="text-sm text-gray-600 flex items-center gap-2">
+                    <Repeat size={14} className="text-gray-500" />
+                    Séries
                   </Label>
                   <div className="relative">
                     <Input
@@ -1083,9 +1186,9 @@ export default function Treino() {
                         setExerciseSeries(Number(e.target.value))
                       }
                       min="1"
-                      className="pr-8 bg-gradient-to-r from-green-50 to-green-100/50"
+                      className="pr-8"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
                       x
                     </span>
                   </div>
@@ -1093,8 +1196,9 @@ export default function Treino() {
 
                 {/* Repetições */}
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-green-600">🎯</span> Repetições
+                  <Label className="text-sm text-gray-600 flex items-center gap-2">
+                    <Target size={14} className="text-gray-500" />
+                    Repetições
                   </Label>
                   <div className="relative">
                     <Input
@@ -1104,9 +1208,9 @@ export default function Treino() {
                         setExerciseRepetitions(Number(e.target.value))
                       }
                       min="1"
-                      className="pr-12 bg-gradient-to-r from-amber-50 to-amber-100/50"
+                      className="pr-12"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
                       reps
                     </span>
                   </div>
@@ -1114,8 +1218,9 @@ export default function Treino() {
 
                 {/* Pausa */}
                 <div className="col-span-2 space-y-2">
-                  <Label className="text-sm text-gray-600 flex items-center gap-1">
-                    <span className="text-green-600">⏱️</span> Tempo de Pausa
+                  <Label className="text-sm text-gray-600 flex items-center gap-2">
+                    <Timer size={14} className="text-gray-500" />
+                    Tempo de Pausa
                   </Label>
                   <div className="relative">
                     <Input
@@ -1123,9 +1228,9 @@ export default function Treino() {
                       value={exercisePause}
                       onChange={(e) => setExercisePause(Number(e.target.value))}
                       min="0"
-                      className="pr-16 bg-gradient-to-r from-blue-50 to-blue-100/50"
+                      className="pr-16"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
                       segundos
                     </span>
                   </div>
@@ -1150,7 +1255,11 @@ export default function Treino() {
                 type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white gap-2"
               >
-                <span>{editExerciseIndex !== undefined ? "💾" : "➕"}</span>
+                {editExerciseIndex !== undefined ? (
+                  <Save size={16} />
+                ) : (
+                  <Plus size={16} />
+                )}
                 {editExerciseIndex !== undefined
                   ? "Salvar Alterações"
                   : "Adicionar Exercício"}
@@ -1189,23 +1298,22 @@ export default function Treino() {
                 value={workoutName}
                 onChange={(e) => setWorkoutName(e.target.value)}
                 placeholder="Ex: Treino A - Peito e Tríceps"
-                className="bg-white/80 backdrop-blur-sm"
+                className="bg-white/90"
               />
             </div>
 
             {/* Seleção de Exercícios */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl space-y-4">
-              <h3 className="font-medium text-gray-700 flex items-center gap-2 justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">💪</span> Exercícios do Treino
-                </div>
+            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-gray-700">Exercícios do Treino</h3>
                 <Badge className="bg-green-600">{selectedExercises.length} selecionados</Badge>
-              </h3>
+              </div>
 
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200">
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                 <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-3 space-y-2">
                   {exercises.length === 0 ? (
                     <div className="text-center py-8">
+                      <ActivitySquare size={32} className="text-gray-300 mx-auto mb-2" />
                       <p className="text-sm text-gray-500">
                         Nenhum exercício cadastrado
                       </p>
@@ -1225,7 +1333,7 @@ export default function Treino() {
                     exercises.map((ex, i) => (
                       <div
                         key={i}
-                        className={`flex items-center gap-3 p-2 rounded-lg transition-all duration-200 ${
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                           selectedExercises.includes(i)
                             ? "bg-green-50 border border-green-200"
                             : "hover:bg-gray-50 border border-transparent"
@@ -1247,17 +1355,17 @@ export default function Treino() {
                         />
                         <div className="flex-1">
                           <p className="font-medium text-gray-700">{ex.name}</p>
-                          <div className="flex gap-3 text-xs text-gray-500">
+                          <div className="flex gap-3 text-xs text-gray-500 mt-1">
                             <span className="flex items-center gap-1">
-                              <span className="text-green-600">🔄</span>
+                              <Repeat size={12} className="text-gray-400" />
                               {ex.series} séries
                             </span>
                             <span className="flex items-center gap-1">
-                              <span className="text-green-600">🎯</span>
+                              <Target size={12} className="text-gray-400" />
                               {ex.repetitions} reps
                             </span>
                             <span className="flex items-center gap-1">
-                              <span className="text-green-600">⏱️</span>
+                              <Timer size={12} className="text-gray-400" />
                               {ex.pause}s
                             </span>
                           </div>
@@ -1287,7 +1395,11 @@ export default function Treino() {
                 className="bg-green-600 hover:bg-green-700 text-white gap-2"
                 disabled={selectedExercises.length === 0}
               >
-                <span>{editWorkoutIndex !== undefined ? "💾" : "➕"}</span>
+                {editWorkoutIndex !== undefined ? (
+                  <Save size={16} />
+                ) : (
+                  <Plus size={16} />
+                )}
                 {editWorkoutIndex !== undefined
                   ? "Salvar Alterações"
                   : "Adicionar Treino"}

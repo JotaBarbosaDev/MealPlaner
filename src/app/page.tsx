@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import "react-toastify/dist/ReactToastify.css";
 import { Sprout } from "lucide-react";
@@ -72,22 +72,20 @@ export default function Page() {
 
   return (
     <div className="font-sans min-h-screen flex flex-col">
+      {/* ToastContainer com configuração otimizada para design elegante */}
       <ToastContainer
         position="top-center"
-        autoClose={2500}
+        autoClose={4000}
         hideProgressBar={false}
         newestOnTop
         closeOnClick
         rtl={false}
-        pauseOnFocusLoss
+        pauseOnFocusLoss={false}
         draggable={false}
-        pauseOnHover={false}
+        pauseOnHover
         theme="light"
-        className="rounded-lg"
-        toastClassName="rounded-lg shadow-md animate-slide-in"
-        bodyClassName="text-sm font-medium"
-        progressClassName="bg-green-500"
-        style={{ minHeight: "auto" }}
+        toastClassName="Toastify__toast--animate"
+        limit={3}
       />
 
       <Header title={getTitle()} />
