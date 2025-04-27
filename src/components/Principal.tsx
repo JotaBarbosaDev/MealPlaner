@@ -68,6 +68,7 @@ export default function Principal() {
   ============================== */
   // Data atual
   const today = new Date();
+  const todayDateString = today.toISOString().split('T')[0]; // Formato YYYY-MM-DD
   const dayNames = [
     "Domingo",
     "Segunda-feira",
@@ -83,6 +84,19 @@ export default function Principal() {
     month: "long",
     year: "numeric",
   });
+
+  // Verificar se já foi registada uma meta hoje
+  const alreadyLoggedDietToday = useMemo(() => {
+    if (!streaks || !streaks.diet || !streaks.diet.lastUpdate) return false;
+    const lastUpdateDate = new Date(streaks.diet.lastUpdate).toISOString().split('T')[0];
+    return lastUpdateDate === todayDateString;
+  }, [streaks, todayDateString]);
+
+  const alreadyLoggedTrainingToday = useMemo(() => {
+    if (!streaks || !streaks.training || !streaks.training.lastUpdate) return false;
+    const lastUpdateDate = new Date(streaks.training.lastUpdate).toISOString().split('T')[0];
+    return lastUpdateDate === todayDateString;
+  }, [streaks, todayDateString]);
 
   // Verifica se hoje é dia de treino
   const todayWorkout = weeklyPlan && weeklyPlan[currentDayOfWeek];
@@ -364,20 +378,27 @@ export default function Principal() {
               ))}
 
               <div className="flex justify-end mt-4">
-                <Button 
-                  onClick={() => {
-                    const newCount = updateTrainingStreak();
-                    toast({
-                      title: "Treino Registado",
-                      description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
-                      duration: 3000
-                    });
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <CalendarCheck size={16} className="mr-2" />
-                  Registar treino concluído
-                </Button>
+                {alreadyLoggedTrainingToday ? (
+                  <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-md text-gray-600">
+                    <Trophy size={16} className="text-green-600" />
+                    <span>Treino já registado hoje!</span>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={() => {
+                      const newCount = updateTrainingStreak();
+                      toast({
+                        title: "Treino Registado",
+                        description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
+                        duration: 3000
+                      });
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CalendarCheck size={16} className="mr-2" />
+                    Registar treino concluído
+                  </Button>
+                )}
               </div>
           </div>
         </ExpandableCard>
@@ -387,9 +408,35 @@ export default function Principal() {
             <Calendar size={32} className="text-blue-500" />
           </div>
           <h3 className="text-lg font-medium text-gray-700 mb-2">Dia de Descanso</h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 mb-4">
             Hoje é o teu dia para recuperação. Aproveita para descansar e preparar-te para o próximo treino!
           </p>
+          
+          {/* Adicionando botão para registar streaks mesmo em dias de descanso */}
+          <div className="flex justify-center mt-4">
+            {alreadyLoggedTrainingToday ? (
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-md text-gray-600">
+                <Trophy size={16} className="text-green-600" />
+                <span>Treino já registado hoje!</span>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => {
+                  const newCount = updateTrainingStreak();
+                  toast({
+                    title: "Treino Registado",
+                    description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
+                    duration: 3000
+                  });
+                }}
+                variant="outline"
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                <CalendarCheck size={16} className="mr-2" />
+                Registar treino extra
+              </Button>
+            )}
+          </div>
         </Card>
       )}
 
@@ -475,20 +522,27 @@ export default function Principal() {
           </div>
 
           <div className="flex justify-end">
-            <Button 
-              onClick={() => {
-                const newCount = updateDietStreak();
-                toast({
-                  title: "Meta Nutricional Cumprida",
-                  description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
-                  duration: 3000
-                });
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CalendarCheck size={16} className="mr-2" />
-              Registar meta cumprida
-            </Button>
+            {alreadyLoggedDietToday ? (
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-md text-gray-600">
+                <Trophy size={16} className="text-green-600" />
+                <span>Meta já registada hoje!</span>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => {
+                  const newCount = updateDietStreak();
+                  toast({
+                    title: "Meta Nutricional Cumprida",
+                    description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
+                    duration: 3000
+                  });
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CalendarCheck size={16} className="mr-2" />
+                Registar meta cumprida
+              </Button>
+            )}
           </div>
         </div>
       </Card>

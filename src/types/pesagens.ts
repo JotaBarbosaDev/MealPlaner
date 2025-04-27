@@ -9,13 +9,14 @@ export interface Measurement {
   height: number;
   visceralFat: number;
   metabolicAge: number;
-  // Novas propriedades para medidas de circunferências
-  waistCircumference?: number; // cintura em cm
-  hipCircumference?: number;   // quadril em cm
-  armCircumference?: number;   // braço em cm
-  thighCircumference?: number; // coxa em cm
-  chestCircumference?: number; // peito em cm
-  neckCircumference?: number;  // pescoço em cm
+  // Medidas de circunferência
+  waistCircumference?: number;  // cintura em cm
+  hipCircumference?: number;    // quadril em cm
+  armCircumference?: number;    // braço em cm
+  thighCircumference?: number;  // coxa em cm
+  chestCircumference?: number;  // peito em cm
+  neckCircumference?: number;   // pescoço em cm
+  calfCircumference?: number;   // panturrilha em cm
 }
 
 export interface BodyTarget {
@@ -23,6 +24,8 @@ export interface BodyTarget {
   targetDate: string;
   createdAt: string;
   achieved: boolean;
+  description?: string;
+  initialValue?: number;
 }
 
 export interface BodyTargets {
@@ -30,4 +33,24 @@ export interface BodyTargets {
   fatPercentTarget?: BodyTarget;
   musclePercentTarget?: BodyTarget;
   waistCircumferenceTarget?: BodyTarget;
+  hipCircumferenceTarget?: BodyTarget;
+  armCircumferenceTarget?: BodyTarget;
+  thighCircumferenceTarget?: BodyTarget;
+  chestCircumferenceTarget?: BodyTarget;
+  neckCircumferenceTarget?: BodyTarget;
+  calfCircumferenceTarget?: BodyTarget;
+}
+
+export interface MeasurementProgress {
+  current: number;
+  previous: number;
+  change: number;
+  changePercent: number;
+  isImprovement: boolean;
+}
+
+export interface MeasurementExport {
+  date: string;
+  measurements: Measurement[];
+  targets?: BodyTargets;
 }

@@ -89,7 +89,7 @@ export default function DietaDashboard({
             </div>
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <span className="text-xs">Carbos</span>
+                <span className="text-xs">HC</span>
                 <span className="text-xs">{Math.round(currentTotals.c)}g</span>
               </div>
               <Progress value={calculatePercentage(currentTotals.c, dailyTargets.c)} className="h-1.5 bg-green-100" indicatorClassName="bg-green-500" />
@@ -169,7 +169,7 @@ export default function DietaDashboard({
           className="w-full mt-2 justify-between"
           onClick={() => onChangeTab('plano')}
         >
-          <span>Gerenciar plano alimentar</span>
+          <span>Gerir plano alimentar</span>
           <ChevronRight size={16} />
         </Button>
       </div>

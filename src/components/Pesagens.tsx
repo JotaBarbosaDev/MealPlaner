@@ -18,7 +18,8 @@ import {
   Settings,
   ChevronUp,
   ChevronDown,
-  Clock
+  Clock,
+  Ruler
 } from "lucide-react";
 
 // Componentes compartilhados
@@ -41,6 +42,10 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
+// Importando os novos componentes de sequência e metas
+import { MeasurementStreak } from "@/components/pesagens/MeasurementStreak";
+import BodyTargetsComponent from "@/components/pesagens/BodyTargets";
+
 interface Measurement {
   date: string;
   time: string;
@@ -52,6 +57,13 @@ interface Measurement {
   height: number;
   visceralFat: number;
   metabolicAge: number;
+  waistCircumference?: number;
+  hipCircumference?: number;
+  armCircumference?: number;
+  thighCircumference?: number;
+  chestCircumference?: number;
+  neckCircumference?: number;
+  calfCircumference?: number;
 }
 
 export default function Pesagens() {
@@ -81,10 +93,26 @@ export default function Pesagens() {
   const [formHeight, setFormHeight] = useState<number>(170);
   const [formVisceralFat, setFormVisceralFat] = useState<number>(10);
   const [formMetabolicAge, setFormMetabolicAge] = useState<number>(25);
+  
+  // Novos estados para medidas de circunferência
+  const [formWaistCircumference, setFormWaistCircumference] = useState<number | undefined>(undefined);
+  const [formHipCircumference, setFormHipCircumference] = useState<number | undefined>(undefined);
+  const [formArmCircumference, setFormArmCircumference] = useState<number | undefined>(undefined);
+  const [formThighCircumference, setFormThighCircumference] = useState<number | undefined>(undefined);
+  const [formChestCircumference, setFormChestCircumference] = useState<number | undefined>(undefined);
+  const [formNeckCircumference, setFormNeckCircumference] = useState<number | undefined>(undefined);
+  const [formCalfCircumference, setFormCalfCircumference] = useState<number | undefined>(undefined);
+  
+  // Aba ativa no diálogo de medidas
+  const [activeTab, setActiveTab] = useState<"main" | "body" | "circumference">("main");
 
   // Estado para controle do filtro e ordenação
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showDetails, setShowDetails] = useState(false);
+  
+  // Estado para visualizar gráficos
+  const [chartMetric, setChartMetric] = useState<"weight" | "muscleMass" | "fat" | "waist">("weight");
+  const [showCharts, setShowCharts] = useState(false);
 
   /* =============================
      2) FUNÇÕES AUXILIARES
@@ -176,6 +204,18 @@ export default function Pesagens() {
     setFormHeight(170);
     setFormVisceralFat(10);
     setFormMetabolicAge(25);
+    
+    // Resetar medidas de circunferência
+    setFormWaistCircumference(undefined);
+    setFormHipCircumference(undefined);
+    setFormArmCircumference(undefined);
+    setFormThighCircumference(undefined);
+    setFormChestCircumference(undefined);
+    setFormNeckCircumference(undefined);
+    setFormCalfCircumference(undefined);
+    
+    // Reset de aba ativa
+    setActiveTab("main");
   };
 
   const openAddDialog = () => {
@@ -198,6 +238,15 @@ export default function Pesagens() {
     setFormHeight(item.height);
     setFormVisceralFat(item.visceralFat);
     setFormMetabolicAge(item.metabolicAge);
+    
+    // Definir medidas de circunferência
+    setFormWaistCircumference(item.waistCircumference);
+    setFormHipCircumference(item.hipCircumference);
+    setFormArmCircumference(item.armCircumference);
+    setFormThighCircumference(item.thighCircumference);
+    setFormChestCircumference(item.chestCircumference);
+    setFormNeckCircumference(item.neckCircumference);
+    setFormCalfCircumference(item.calfCircumference);
 
     setEditingIndex(index);
     setAddDialogOpen(true);
@@ -229,6 +278,14 @@ export default function Pesagens() {
       height: formHeight || 0,
       visceralFat: formVisceralFat || 0,
       metabolicAge: formMetabolicAge || 0,
+      // Adicionar medidas de circunferência (apenas se tiverem valores)
+      ...(formWaistCircumference !== undefined && { waistCircumference: formWaistCircumference }),
+      ...(formHipCircumference !== undefined && { hipCircumference: formHipCircumference }),
+      ...(formArmCircumference !== undefined && { armCircumference: formArmCircumference }),
+      ...(formThighCircumference !== undefined && { thighCircumference: formThighCircumference }),
+      ...(formChestCircumference !== undefined && { chestCircumference: formChestCircumference }),
+      ...(formNeckCircumference !== undefined && { neckCircumference: formNeckCircumference }),
+      ...(formCalfCircumference !== undefined && { calfCircumference: formCalfCircumference })
     };
 
     if (editingIndex !== undefined) {
@@ -288,114 +345,131 @@ export default function Pesagens() {
         }
       />
 
-      {/* Resumo / Estatísticas */}
-      {measurements.length > 0 && (
-        <Card className="p-5 bg-gradient-to-br from-white to-blue-50/30 border-blue-100 shadow-sm">
-          <h3 className="font-medium text-gray-800 flex items-center gap-2 mb-4">
-            <BarChart3 size={20} className="text-blue-600" /> 
-            Resumo de Evolução
-          </h3>
-
-          <div className="flex flex-wrap gap-3">
-            <StatCard
-              icon={<Weight size={18} className="text-blue-600" />}
-              label="Última Medição"
-              value={sortedMeasurements[0]?.weight || 0}
-              unit="kg"
-              delay={0.1}
-              color="blue"
-            />
-
-            <StatCard
-              icon={<Calendar size={18} className="text-green-600" />}
-              label="Medições"
-              value={measurements.length}
-              unit="total"
-              delay={0.2}
-              color="green"
-            />
-
-            {changes && (
-              <>
-                <StatCard
-                  icon={<TrendingUp size={18} className="text-amber-600" />}
-                  label="Variação Peso"
-                  value={changes.weightChange > 0 ? `+${changes.weightChange}` : changes.weightChange}
-                  unit="kg"
-                  delay={0.3}
-                  color={changes.weightChange > 0 ? "amber" : "green"}
-                />
-
-                <StatCard
-                  icon={<Activity size={18} className="text-green-600" />}
-                  label="Massa Musc."
-                  value={changes.muscleMassChange > 0 ? `+${changes.muscleMassChange}` : changes.muscleMassChange}
-                  unit="kg"
-                  delay={0.4}
-                  color={changes.muscleMassChange >= 0 ? "green" : "amber"}
-                />
-              </>
-            )}
+      {/* Sistema de Streaks/Sequência e Cards de Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Streaks de Medições */}
+        {measurements.length > 0 && (
+          <div className="col-span-full md:col-span-1">
+            <MeasurementStreak measurements={measurements} />
           </div>
+        )}
 
-          {bmiTrend && (
-            <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm mt-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-800 flex items-center gap-2">
-                  <Activity size={18} className="text-blue-600" />
-                  Evolução do IMC
-                </h4>
-                <Badge variant="outline" className={
-                  bmiTrend.diff === 0 
-                    ? "bg-blue-50 text-blue-600 border-blue-200" 
-                    : bmiTrend.diff < 0 
-                      ? "bg-green-50 text-green-600 border-green-200" 
-                      : "bg-amber-50 text-amber-600 border-amber-200"
-                }>
-                  {bmiTrend.diff === 0 
-                    ? "Mantendo" 
-                    : bmiTrend.diff < 0 
-                      ? "Diminuindo" 
-                      : "Aumentando"}
-                </Badge>
-              </div>
-              
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <div className="bg-gray-50 px-3 py-1.5 rounded-lg">
-                  <span className="text-gray-500">Inicial: </span>
-                  <span className="font-medium">{bmiTrend.first}</span>
-                  <span className="ml-2 text-xs text-gray-500">
-                    ({getBMICategory(bmiTrend.first).label})
-                  </span>
-                </div>
-                <div className="bg-blue-50 px-3 py-1.5 rounded-lg">
-                  <span className="text-gray-500">Atual: </span>
-                  <span className="font-medium">{bmiTrend.last}</span>
-                  <span className={`ml-2 text-xs ${getBMICategory(bmiTrend.last).color}`}>
-                    ({getBMICategory(bmiTrend.last).label})
-                  </span>
-                </div>
-                <div className={
-                  bmiTrend.diff === 0 
-                    ? "bg-blue-50 px-3 py-1.5 rounded-lg" 
-                    : bmiTrend.diff < 0 
-                      ? "bg-green-50 px-3 py-1.5 rounded-lg" 
-                      : "bg-amber-50 px-3 py-1.5 rounded-lg"
-                }>
-                  <span className="text-gray-500">Diferença: </span>
-                  <span className={
-                    bmiTrend.diff === 0 
-                      ? "text-blue-600 font-medium" 
-                      : bmiTrend.diff < 0 
-                        ? "text-green-600 font-medium" 
-                        : "text-amber-600 font-medium"
-                  }>
-                    {bmiTrend.diff > 0 ? `+${bmiTrend.diff}` : bmiTrend.diff}
-                  </span>
-                </div>
-              </div>
+        {/* Resumo / Estatísticas */}
+        {measurements.length > 0 && (
+          <Card className="p-5 bg-gradient-to-br from-white to-blue-50/30 border-blue-100 shadow-sm col-span-full md:col-span-2">
+            <h3 className="font-medium text-gray-800 flex items-center gap-2 mb-4">
+              <BarChart3 size={20} className="text-blue-600" /> 
+              Resumo de Evolução
+            </h3>
+
+            <div className="flex flex-wrap gap-3">
+              <StatCard
+                icon={<Weight size={18} className="text-blue-600" />}
+                label="Última Medição"
+                value={sortedMeasurements[0]?.weight || 0}
+                unit="kg"
+                delay={0.1}
+                color="blue"
+              />
+
+              <StatCard
+                icon={<Calendar size={18} className="text-green-600" />}
+                label="Medições"
+                value={measurements.length}
+                unit="total"
+                delay={0.2}
+                color="green"
+              />
+
+              {changes && (
+                <>
+                  <StatCard
+                    icon={<TrendingUp size={18} className="text-amber-600" />}
+                    label="Variação Peso"
+                    value={changes.weightChange > 0 ? `+${changes.weightChange}` : changes.weightChange}
+                    unit="kg"
+                    delay={0.3}
+                    color={changes.weightChange > 0 ? "amber" : "green"}
+                  />
+
+                  <StatCard
+                    icon={<Activity size={18} className="text-green-600" />}
+                    label="Massa Musc."
+                    value={changes.muscleMassChange > 0 ? `+${changes.muscleMassChange}` : changes.muscleMassChange}
+                    unit="kg"
+                    delay={0.4}
+                    color={changes.muscleMassChange >= 0 ? "green" : "amber"}
+                  />
+                </>
+              )}
             </div>
-          )}
+
+            {bmiTrend && (
+              <div className="bg-white rounded-lg p-4 border border-blue-100 shadow-sm mt-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-800 flex items-center gap-2">
+                    <Activity size={18} className="text-blue-600" />
+                    Evolução do IMC
+                  </h4>
+                  <Badge variant="outline" className={
+                    bmiTrend.diff === 0 
+                      ? "bg-blue-50 text-blue-600 border-blue-200" 
+                      : bmiTrend.diff < 0 
+                        ? "bg-green-50 text-green-600 border-green-200" 
+                        : "bg-amber-50 text-amber-600 border-amber-200"
+                  }>
+                    {bmiTrend.diff === 0 
+                      ? "Mantendo" 
+                      : bmiTrend.diff < 0 
+                        ? "Diminuindo" 
+                        : "Aumentando"}
+                  </Badge>
+                </div>
+                
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <div className="bg-gray-50 px-3 py-1.5 rounded-lg">
+                    <span className="text-gray-500">Inicial: </span>
+                    <span className="font-medium">{bmiTrend.first}</span>
+                    <span className="ml-2 text-xs text-gray-500">
+                      ({getBMICategory(bmiTrend.first).label})
+                    </span>
+                  </div>
+                  <div className="bg-blue-50 px-3 py-1.5 rounded-lg">
+                    <span className="text-gray-500">Atual: </span>
+                    <span className="font-medium">{bmiTrend.last}</span>
+                    <span className={`ml-2 text-xs ${getBMICategory(bmiTrend.last).color}`}>
+                      ({getBMICategory(bmiTrend.last).label})
+                    </span>
+                  </div>
+                  <div className={
+                    bmiTrend.diff === 0 
+                      ? "bg-blue-50 px-3 py-1.5 rounded-lg" 
+                      : bmiTrend.diff < 0 
+                        ? "bg-green-50 px-3 py-1.5 rounded-lg" 
+                        : "bg-amber-50 px-3 py-1.5 rounded-lg"
+                  }>
+                    <span className="text-gray-500">Diferença: </span>
+                    <span className={
+                      bmiTrend.diff === 0 
+                        ? "text-blue-600 font-medium" 
+                        : bmiTrend.diff < 0 
+                          ? "text-green-600 font-medium" 
+                          : "text-amber-600 font-medium"
+                    }>
+                      {bmiTrend.diff > 0 ? `+${bmiTrend.diff}` : bmiTrend.diff}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
+
+      {/* Sistema de metas corporais */}
+      {measurements.length > 0 && (
+        <Card className="p-5 bg-white border border-blue-100 shadow-sm">
+          <BodyTargetsComponent measurements={measurements} />
         </Card>
       )}
 
@@ -420,19 +494,84 @@ export default function Pesagens() {
               Mais antigas
             </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDetails(!showDetails)}
-            className={showDetails ? "text-blue-600 flex items-center gap-1" : "flex items-center gap-1"}
-          >
-            {showDetails ? (
-              <>Ocultar detalhes <ChevronUp size={16} /></>
-            ) : (
-              <>Mostrar detalhes <ChevronDown size={16} /></>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCharts(!showCharts)}
+              className={showCharts ? "text-blue-600 border-blue-200 bg-blue-50" : ""}
+            >
+              <BarChart3 size={16} className="mr-1" />
+              {showCharts ? "Ocultar gráficos" : "Mostrar gráficos"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDetails(!showDetails)}
+              className={showDetails ? "text-blue-600 flex items-center gap-1" : "flex items-center gap-1"}
+            >
+              {showDetails ? (
+                <>Ocultar detalhes <ChevronUp size={16} /></>
+              ) : (
+                <>Mostrar detalhes <ChevronDown size={16} /></>
+              )}
+            </Button>
+          </div>
         </div>
+      )}
+
+      {/* Seção de visualização de gráficos */}
+      {measurements.length > 0 && showCharts && (
+        <Card className="p-5 bg-white border border-gray-100 shadow-sm">
+          <h3 className="font-medium text-gray-800 flex items-center gap-2 mb-4">
+            <BarChart3 size={20} className="text-blue-600" /> 
+            Gráficos de Evolução
+          </h3>
+
+          <div className="flex flex-wrap gap-3 mb-4">
+            <Button 
+              variant={chartMetric === "weight" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setChartMetric("weight")}
+            >
+              <Weight size={14} className="mr-1" /> Peso
+            </Button>
+            <Button 
+              variant={chartMetric === "muscleMass" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setChartMetric("muscleMass")}
+            >
+              <Activity size={14} className="mr-1" /> Massa Muscular
+            </Button>
+            <Button 
+              variant={chartMetric === "fat" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setChartMetric("fat")}
+            >
+              <Activity size={14} className="mr-1" /> Gordura
+            </Button>
+            <Button 
+              variant={chartMetric === "waist" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setChartMetric("waist")}
+              disabled={!measurements.some(m => m.waistCircumference)}
+            >
+              <Ruler size={14} className="mr-1" /> Cintura
+            </Button>
+          </div>
+
+          <div className="h-64 bg-gray-50 rounded-lg border border-gray-100 flex items-center justify-center">
+            <p className="text-gray-500">
+              {chartMetric === "waist" && !measurements.some(m => m.waistCircumference)
+                ? "Nenhuma medida de cintura registrada"
+                : "Gráfico será exibido aqui"}
+            </p>
+            {/* 
+              Aqui você pode implementar um componente de gráfico real
+              usando bibliotecas como recharts, chart.js, ou apexcharts
+            */}
+          </div>
+        </Card>
       )}
 
       {/* Lista de Medições */}
@@ -484,7 +623,7 @@ export default function Pesagens() {
               
             return (
               <motion.div
-                key={`${measurement.date}-${measurement.time}`}
+                key={`${measurement.date}-${measurement.time}-${index}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -498,11 +637,11 @@ export default function Pesagens() {
                       </div>
                     }
                     subtitle={
-                      <div className="flex items-center text-gray-500">
+                      <span className="flex items-center text-gray-500">
                         <Clock size={14} className="mr-1" /> {formattedTime} 
                         <span className="mx-2">•</span> 
                         <Weight size={14} className="mr-1" /> {measurement.weight} kg
-                      </div>
+                      </span>
                     }
                     icon={<Weight size={18} className={`${index === 0 ? "text-blue-600" : "text-gray-600"}`} />}
                     defaultExpanded={index === 0}
@@ -633,6 +772,48 @@ export default function Pesagens() {
                               <span className="text-xs text-gray-500 block">Idade metabólica:</span>{" "}
                               <span className="font-medium">{measurement.metabolicAge} anos</span>
                             </div>
+                            {measurement.waistCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Cintura:</span>{" "}
+                                <span className="font-medium">{measurement.waistCircumference} cm</span>
+                              </div>
+                            )}
+                            {measurement.hipCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Quadril:</span>{" "}
+                                <span className="font-medium">{measurement.hipCircumference} cm</span>
+                              </div>
+                            )}
+                            {measurement.armCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Braço:</span>{" "}
+                                <span className="font-medium">{measurement.armCircumference} cm</span>
+                              </div>
+                            )}
+                            {measurement.thighCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Coxa:</span>{" "}
+                                <span className="font-medium">{measurement.thighCircumference} cm</span>
+                              </div>
+                            )}
+                            {measurement.chestCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Peito:</span>{" "}
+                                <span className="font-medium">{measurement.chestCircumference} cm</span>
+                              </div>
+                            )}
+                            {measurement.neckCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Pescoço:</span>{" "}
+                                <span className="font-medium">{measurement.neckCircumference} cm</span>
+                              </div>
+                            )}
+                            {measurement.calfCircumference && (
+                              <div className="bg-white p-2 rounded-md">
+                                <span className="text-xs text-gray-500 block">Panturrilha:</span>{" "}
+                                <span className="font-medium">{measurement.calfCircumference} cm</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
@@ -659,207 +840,389 @@ export default function Pesagens() {
           </DialogHeader>
           
           <form onSubmit={handleSaveMeasurement} className="space-y-5">
-            {/* Data e hora */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm text-gray-700 flex items-center gap-1">
-                  <Calendar size={14} className="text-blue-600" /> Data
-                </Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formDate}
-                  onChange={(e) => setFormDate(e.target.value)}
-                  className="bg-white/90"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="time" className="text-sm text-gray-700 flex items-center gap-1">
-                  <Clock size={14} className="text-blue-600" /> Hora
-                </Label>
-                <Input
-                  id="time"
-                  type="time"
-                  value={formTime}
-                  onChange={(e) => setFormTime(e.target.value)}
-                  className="bg-white/90"
-                />
-              </div>
+            {/* Navegação por tabs */}
+            <div className="flex border-b border-gray-200">
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "main"
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("main")}
+              >
+                Principais
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "body"
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("body")}
+              >
+                Composição
+              </button>
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium ${
+                  activeTab === "circumference"
+                    ? "border-b-2 border-blue-600 text-blue-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                onClick={() => setActiveTab("circumference")}
+              >
+                Circunferências
+              </button>
             </div>
 
-            {/* Medidas primárias */}
-            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-700">Dados Principais</h3>
-                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
-                  <Weight size={14} className="text-gray-400" />
+            {/* Campos principais (data, hora, peso, altura) */}
+            {activeTab === "main" && (
+              <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-gray-700">Dados Principais</h3>
+                  <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                    <Weight size={14} className="text-gray-400" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="weight" className="text-sm text-gray-600 flex items-center gap-2">
+                      <Weight size={14} className="text-gray-500" />
+                      Peso (kg)
+                    </Label>
+                    <Input
+                      id="weight"
+                      type="number"
+                      step="0.1"
+                      value={formWeight}
+                      onChange={(e) => setFormWeight(+e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="height" className="text-sm text-gray-600 flex items-center gap-2">
+                      <Activity size={14} className="text-gray-500" />
+                      Altura (cm)
+                    </Label>
+                    <Input
+                      id="height"
+                      type="number"
+                      step="0.1"
+                      value={formHeight}
+                      onChange={(e) => setFormHeight(+e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date" className="text-sm text-gray-700 flex items-center gap-1">
+                      <Calendar size={14} className="text-gray-500" /> Data
+                    </Label>
+                    <Input
+                      type="date"
+                      id="date"
+                      value={formDate}
+                      onChange={(e) => setFormDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time" className="text-sm text-gray-700 flex items-center gap-1">
+                      <Clock size={14} className="text-gray-500" /> Hora
+                    </Label>
+                    <Input
+                      type="time"
+                      id="time"
+                      value={formTime}
+                      onChange={(e) => setFormTime(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="weight" className="text-sm text-gray-600 flex items-center gap-2">
-                    <Weight size={14} className="text-gray-500" />
-                    Peso (kg)
-                  </Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    step="0.1"
-                    value={formWeight}
-                    onChange={(e) => setFormWeight(+e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height" className="text-sm text-gray-600 flex items-center gap-2">
-                    <Activity size={14} className="text-gray-500" />
-                    Altura (cm)
-                  </Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    step="0.1"
-                    value={formHeight}
-                    onChange={(e) => setFormHeight(+e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            
+            )}
+
             {/* Composição corporal */}
-            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-700">Composição Corporal</h3>
-                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
-                  <Activity size={14} className="text-gray-400" />
+            {activeTab === "body" && (
+              <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-gray-700">Composição Corporal</h3>
+                  <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                    <Activity size={14} className="text-gray-400" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="muscleMassPercent" className="text-sm text-gray-600">
+                      Massa Muscular (%)
+                    </Label>
+                    <Input
+                      id="muscleMassPercent"
+                      type="number"
+                      step="0.1"
+                      value={formMuscleMassPercent}
+                      onChange={handleMuscleMassPercentChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="muscleMassKg" className="text-sm text-gray-600">
+                      Massa Muscular (kg)
+                    </Label>
+                    <Input
+                      id="muscleMassKg"
+                      type="number"
+                      step="0.1"
+                      value={formMuscleMassKg}
+                      onChange={handleMuscleMassKgChange}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="fatMassPercent" className="text-sm text-gray-600">
+                      Massa Gorda (%)
+                    </Label>
+                    <Input
+                      id="fatMassPercent"
+                      type="number"
+                      step="0.1"
+                      value={formFatMassPercent}
+                      onChange={(e) => setFormFatMassPercent(+e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="waterPercent" className="text-sm text-gray-600">
+                      Água Corporal (%)
+                    </Label>
+                    <Input
+                      id="waterPercent"
+                      type="number"
+                      step="0.1"
+                      value={formWaterPercent}
+                      onChange={(e) => setFormWaterPercent(+e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                {/* Dados metabólicos */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="visceralFat" className="text-sm text-gray-600">
+                      Gordura Visceral
+                    </Label>
+                    <Input
+                      id="visceralFat"
+                      type="number"
+                      step="0.1"
+                      value={formVisceralFat}
+                      onChange={(e) => setFormVisceralFat(+e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="metabolicAge" className="text-sm text-gray-600">
+                      Idade Metabólica
+                    </Label>
+                    <Input
+                      id="metabolicAge"
+                      type="number"
+                      value={formMetabolicAge}
+                      onChange={(e) => setFormMetabolicAge(+e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="muscleMassPercent" className="text-sm text-gray-600">
-                    Massa Muscular (%)
-                  </Label>
-                  <Input
-                    id="muscleMassPercent"
-                    type="number"
-                    step="0.1"
-                    value={formMuscleMassPercent}
-                    onChange={handleMuscleMassPercentChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="muscleMassKg" className="text-sm text-gray-600">
-                    Massa Muscular (kg)
-                  </Label>
-                  <Input
-                    id="muscleMassKg"
-                    type="number"
-                    step="0.1"
-                    value={formMuscleMassKg}
-                    onChange={handleMuscleMassKgChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fatMassPercent" className="text-sm text-gray-600">
-                    Massa Gorda (%)
-                  </Label>
-                  <Input
-                    id="fatMassPercent"
-                    type="number"
-                    step="0.1"
-                    value={formFatMassPercent}
-                    onChange={(e) => setFormFatMassPercent(+e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="waterPercent" className="text-sm text-gray-600">
-                    Água Corporal (%)
-                  </Label>
-                  <Input
-                    id="waterPercent"
-                    type="number"
-                    step="0.1"
-                    value={formWaterPercent}
-                    onChange={(e) => setFormWaterPercent(+e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+            )}
             
-            {/* Dados metabólicos */}
-            <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-700">Dados Metabólicos</h3>
-                <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
-                  <FlaskConical size={14} className="text-gray-400" />
+            {/* Medidas de circunferência */}
+            {activeTab === "circumference" && (
+              <div className="border border-gray-100 rounded-xl bg-white/80 p-5 shadow-sm space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-gray-700">Medidas de Circunferência</h3>
+                  <div className="h-6 w-6 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
+                    <Ruler size={14} className="text-gray-400" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="waistCircumference" className="text-sm text-gray-600">
+                      Cintura (cm)
+                    </Label>
+                    <Input
+                      id="waistCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formWaistCircumference ?? ''}
+                      onChange={(e) => setFormWaistCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="hipCircumference" className="text-sm text-gray-600">
+                      Quadril (cm)
+                    </Label>
+                    <Input
+                      id="hipCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formHipCircumference ?? ''}
+                      onChange={(e) => setFormHipCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="chestCircumference" className="text-sm text-gray-600">
+                      Peito (cm)
+                    </Label>
+                    <Input
+                      id="chestCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formChestCircumference ?? ''}
+                      onChange={(e) => setFormChestCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="armCircumference" className="text-sm text-gray-600">
+                      Braço (cm)
+                    </Label>
+                    <Input
+                      id="armCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formArmCircumference ?? ''}
+                      onChange={(e) => setFormArmCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="thighCircumference" className="text-sm text-gray-600">
+                      Coxa (cm)
+                    </Label>
+                    <Input
+                      id="thighCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formThighCircumference ?? ''}
+                      onChange={(e) => setFormThighCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="calfCircumference" className="text-sm text-gray-600">
+                      Panturrilha (cm)
+                    </Label>
+                    <Input
+                      id="calfCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formCalfCircumference ?? ''}
+                      onChange={(e) => setFormCalfCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="neckCircumference" className="text-sm text-gray-600">
+                      Pescoço (cm)
+                    </Label>
+                    <Input
+                      id="neckCircumference"
+                      type="number"
+                      step="0.1"
+                      value={formNeckCircumference ?? ''}
+                      onChange={(e) => setFormNeckCircumference(e.target.value ? +e.target.value : undefined)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="visceralFat" className="text-sm text-gray-600">
-                    Gordura Visceral
-                  </Label>
-                  <Input
-                    id="visceralFat"
-                    type="number"
-                    step="0.1"
-                    value={formVisceralFat}
-                    onChange={(e) => setFormVisceralFat(+e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="metabolicAge" className="text-sm text-gray-600">
-                    Idade Metabólica
-                  </Label>
-                  <Input
-                    id="metabolicAge"
-                    type="number"
-                    value={formMetabolicAge}
-                    onChange={(e) => setFormMetabolicAge(+e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+            )}
             
             {/* IMC Calculado */}
             <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-700">IMC Calculado</h4>
-                  <p className="text-sm text-gray-500">Com base no peso e altura informados</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-xl font-semibold">
+                  <div className="text-sm text-gray-500 mb-1">IMC Calculado</div>
+                  <div className="font-medium text-lg">
                     {calculateBMI(formWeight, formHeight)}
-                  </div>
-                  <div className={`text-sm ${getBMICategory(calculateBMI(formWeight, formHeight)).color}`}>
-                    {getBMICategory(calculateBMI(formWeight, formHeight)).label}
+                    {" "}
+                    <span className={`text-sm ${getBMICategory(calculateBMI(formWeight, formHeight)).color}`}>
+                      ({getBMICategory(calculateBMI(formWeight, formHeight)).label})
+                    </span>
                   </div>
                 </div>
+                {formWaistCircumference && formHipCircumference && (
+                  <div>
+                    <div className="text-sm text-gray-500 mb-1">Relação Cintura/Quadril</div>
+                    <div className="font-medium text-lg">
+                      {(formWaistCircumference / formHipCircumference).toFixed(2)}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-            
-            <DialogFooter className="gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  resetForm();
-                  setAddDialogOpen(false);
-                }}
-              >
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white gap-2"
-              >
-                {editingIndex !== undefined ? <Save size={16} /> : <PlusCircle size={16} />}
-                {editingIndex !== undefined ? "Salvar Alterações" : "Adicionar Medição"}
+              <Button type="submit">
+                {editingIndex !== undefined ? "Atualizar" : "Adicionar"} Medição
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+      
+      {/* Detalhes da medição */}
+      {/* =============================
+         5) GRÁFICOS
+      ============================== */}
+      {showCharts && (
+        <Card className="p-5 bg-white border border-gray-100 shadow-sm">
+          <h3 className="font-medium text-gray-800 flex items-center gap-2 mb-4">
+            <BarChart3 size={20} className="text-blue-600" /> 
+            Gráficos de Evolução
+          </h3>
+
+          <div className="flex flex-wrap gap-3">
+            {chartMetric === "weight" && (
+              <StatCard
+                icon={<Weight size={18} className="text-blue-600" />}
+                label="Peso"
+                value={measurements[measurements.length - 1]?.weight || 0}
+                unit="kg"
+                delay={0.1}
+                color="blue"
+              />
+            )}
+
+            {chartMetric === "muscleMass" && (
+              <StatCard
+                icon={<Activity size={18} className="text-green-600" />}
+                label="Massa Muscular"
+                value={measurements[measurements.length - 1]?.muscleMassKg || 0}
+                unit="kg"
+                delay={0.1}
+                color="green"
+              />
+            )}
+
+            {chartMetric === "fat" && (
+              <StatCard
+                icon={<Activity size={18} className="text-amber-600" />}
+                label="Massa Gorda"
+                value={measurements[measurements.length - 1]?.fatMassPercent || 0}
+                unit="%"
+                delay={0.1}
+                color="amber"
+              />
+            )}
+
+            {chartMetric === "waist" && (
+              <StatCard
+                icon={<Activity size={18} className="text-rose-600" />}
+                label="Cintura"
+                value={measurements[measurements.length - 1]?.waistCircumference || 0}
+                unit="cm"
+                delay={0.1}
+                color="rose"
+              />
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

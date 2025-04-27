@@ -273,7 +273,7 @@ export default function DietaConfiguracoes({
               <div className="text-gray-600">{tempProtPercent}% • {protGrams}g</div>
             </div>
             <div>
-              <div className="font-medium text-green-600">Carboidratos</div>
+              <div className="font-medium text-green-600">Hidratos de Carbono</div>
               <div className="text-gray-600">{tempCarbPercent}% • {carbGrams}g</div>
             </div>
             <div>
@@ -306,7 +306,7 @@ export default function DietaConfiguracoes({
             
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor="carbSlider">Carboidratos</Label>
+                <Label htmlFor="carbSlider">Hidratos de Carbono</Label>
                 <span className="text-sm font-medium text-green-600">{tempCarbPercent}%</span>
               </div>
               <Slider
@@ -416,7 +416,7 @@ export default function DietaConfiguracoes({
             
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label>Lanche da Tarde</Label>
+                <Label>Lanche</Label>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">{tempLPerc}%</span>
                   <span className="text-xs text-gray-500">{lCalories} kcal</span>

@@ -5,7 +5,7 @@ export interface NutritionalInfo {
   fat: number;
 }
 
-export type MealName = "Pequeno-Almoço" | "Almoço" | "Lanche da Tarde" | "Jantar";
+export type MealName = "Pequeno-Almoço" | "Almoço" | "Lanche" | "Jantar";
 
 export interface Product {
   id: string;
