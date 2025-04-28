@@ -37,7 +37,7 @@ export default function Dieta() {
   const [meals, setMeals] = useLocalStorage<Meal[]>("meals", [
     {name: "Pequeno-Almoço", plates: [], id: uuidv4()},
     {name: "Almoço", plates: [], id: uuidv4()},
-    {name: "Lanche da Tarde", plates: [], id: uuidv4()},
+    {name: "Lanche", plates: [], id: uuidv4()},
     {name: "Jantar", plates: [], id: uuidv4()},
   ]);
   const [plates, setPlates] = useLocalStorage<Plate[]>("plates", []);
@@ -56,7 +56,7 @@ export default function Dieta() {
     setMeals([
       {name: "Pequeno-Almoço", plates: [], id: uuidv4()},
       {name: "Almoço", plates: [], id: uuidv4()},
-      {name: "Lanche da Tarde", plates: [], id: uuidv4()},
+      {name: "Lanche", plates: [], id: uuidv4()},
       {name: "Jantar", plates: [], id: uuidv4()},
     ]);
   }
@@ -86,7 +86,7 @@ export default function Dieta() {
           return (paPerc ?? 20) / 100;
         case "Almoço":
           return (aPerc ?? 30) / 100;
-        case "Lanche da Tarde":
+        case "Lanche":
           return (lPerc ?? 20) / 100;
         case "Jantar":
           return (jPerc ?? 30) / 100;
@@ -218,7 +218,7 @@ export default function Dieta() {
             mealTargets={{
               "Pequeno-Almoço": calculateMealTargets("Pequeno-Almoço"),
               "Almoço": calculateMealTargets("Almoço"),
-              "Lanche da Tarde": calculateMealTargets("Lanche da Tarde"),
+              "Lanche": calculateMealTargets("Lanche"),
               "Jantar": calculateMealTargets("Jantar")
             }}
             meals={meals || []}
