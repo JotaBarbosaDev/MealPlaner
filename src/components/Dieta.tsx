@@ -13,20 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 
-// Importação dos componentes de subseções
 import DietaDashboard from "@/components/dieta/Dashboard";
 import DietaProdutos from "@/components/dieta/Produtos";
 import DietaPratos from "@/components/dieta/Pratos";
 import DietaPlano from "@/components/dieta/Plano";
 import DietaConfiguracoes from "@/components/dieta/Configuracoes";
 
-// Importação de tipos
 import { Product, Plate, Meal, MealName } from "@/types/dieta";
 
 export default function Dieta() {
-  /* ==============================
-      1) Estados principais
-    ============================== */
   const [calTarget, setCalTarget] = useLocalStorage<number>("calTarget", 1975);
   const [protPercent, setProtPercent] = useLocalStorage<number>(
     "protPercent",
@@ -38,7 +33,6 @@ export default function Dieta() {
     50
   );
 
-  // Utilização de tipos atualizados para compatibilidade com componentes
   const [products, setProducts] = useLocalStorage<Product[]>("products", []);
   const [meals, setMeals] = useLocalStorage<Meal[]>("meals", [
     {name: "Pequeno-Almoço", plates: [], id: uuidv4()},
@@ -57,7 +51,7 @@ export default function Dieta() {
     }
   );
 
-  // Se meals estiver vazio (caso reset), recria
+  // Recria refeições se estiver vazio
   if (!meals || meals.length === 0) {
     setMeals([
       {name: "Pequeno-Almoço", plates: [], id: uuidv4()},
@@ -67,15 +61,11 @@ export default function Dieta() {
     ]);
   }
 
-  // Estado para gerenciar a aba atual
   const [currentTab, setCurrentTab] = useLocalStorage<string>(
     "dietaCurrentTab",
     "dashboard"
   );
 
-  /* ==============================
-      2) Funções de Cálculo
-    ============================== */
   function calculateDailyTargets() {
     const p = (((protPercent ?? 30) / 100) * (calTarget ?? 1975)) / 4;
     const f = (((fatPercent ?? 20) / 100) * (calTarget ?? 1975)) / 9;
@@ -119,7 +109,6 @@ export default function Dieta() {
         const prod = (products || []).find(p => p.id === item.productId);
         if (!prod) return acc;
         
-        // Calcula com base na quantidade e nos valores nutricionais do produto
         const factor = item.amount / prod.baseAmount;
         return {
           p: acc.p + prod.nutritionalInfo.protein * factor,
@@ -186,9 +175,6 @@ export default function Dieta() {
     );
   }
 
-  /* ==============================
-      5) Render Final - Nova Interface com Abas
-    ============================== */
   return (
     <div className="pb-6 space-y-4">
       <div className="flex justify-between items-center">

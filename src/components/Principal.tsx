@@ -10,20 +10,17 @@ import {
   Dumbbell, Apple, Weight, Calendar, Trophy, TrendingUp
 } from "lucide-react";
 
-// Componentes partilhados
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { ExpandableCard } from "@/components/shared/ExpandableCard";
 import { StreakCard } from "@/components/shared/StreakCard";
 import { DailyTip } from "@/components/shared/DailyTip";
 
-// Componentes UI
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-// Tipos
 import type { Measurement } from "@/types/pesagens";
 import type { Workout, WeeklyPlan, TrainingLogEntry, Exercise } from "@/types/treino";
 import type { Meal, Plate, Product } from "@/types/dieta";
@@ -32,26 +29,20 @@ import type { UserStreaks, Streak } from "@/types/streaks";
 export default function Principal() {
   const { toast } = useToast();
   
-  /* =============================
-     1) ESTADOS (do localStorage)
-  ============================== */
-  // Dieta
+  // Estados de localStorage
   const [meals] = useLocalStorage<Meal[]>("meals", []);
   const [calTarget] = useLocalStorage<number>("calTarget", 1975);
   const [protPercent] = useLocalStorage<number>("protPercent", 30);
   const [fatPercent] = useLocalStorage<number>("fatPercent", 20);
   const [carbPercent] = useLocalStorage<number>("carbPercent", 50);
 
-  // Treino
   const [exercises] = useLocalStorage<Exercise[]>("exercises", []);
   const [workouts] = useLocalStorage<Workout[]>("workouts", []);
   const [weeklyPlan] = useLocalStorage<WeeklyPlan>("weeklyPlan", {});
   const [trainingLogs] = useLocalStorage<TrainingLogEntry[]>("trainingLogs", []);
 
-  // Pesagens
   const [measurements] = useLocalStorage<Measurement[]>("measurements", []);
 
-  // Sequências (Streaks)
   const emptyStreak: Streak = {
     count: 0,
     lastUpdate: new Date().toISOString(),
@@ -65,16 +56,12 @@ export default function Principal() {
     steps: emptyStreak
   });
 
-  // Meta de passos diários
   const [stepsTarget, setStepsTarget] = useLocalStorage<number>("stepsTarget", 10000);
   const [currentSteps, setCurrentSteps] = useLocalStorage<number>("currentSteps", 0);
 
-  /* =============================
-     2) CÁLCULOS E AUXILIARES
-  ============================== */
-  // Data atual
+  // Dados de data
   const today = new Date();
-  const todayDateString = today.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  const todayDateString = today.toISOString().split('T')[0];
   const dayNames = [
     "Domingo",
     "Segunda-feira",
@@ -91,7 +78,7 @@ export default function Principal() {
     year: "numeric",
   });
 
-  // Verificar se já foi registada uma meta hoje
+  // Verificação de registros diários
   const alreadyLoggedDietToday = useMemo(() => {
     if (!streaks || !streaks.diet || !streaks.diet.lastUpdate) return false;
     const lastUpdateDate = new Date(streaks.diet.lastUpdate).toISOString().split('T')[0];
@@ -114,7 +101,7 @@ export default function Principal() {
   const todayWorkout = weeklyPlan && weeklyPlan[currentDayOfWeek];
   const isTrainingDay = todayWorkout && todayWorkout !== "Descanso";
 
-  // Últimas medições
+  // Última medição registrada
   const lastMeasurement = useMemo(() => {
     if (!measurements || measurements.length === 0) return null;
 
@@ -124,14 +111,13 @@ export default function Principal() {
     })[0];
   }, [measurements]);
 
-  // Cálculo de IMC
+  // Funções auxiliares
   const calculateBMI = (weight: number, height: number) => {
     if (!weight || !height) return 0;
     const heightMeters = height / 100;
     return +(weight / (heightMeters * heightMeters)).toFixed(1);
   };
 
-  // Classificar IMC
   const getBMICategory = (bmi: number) => {
     if (bmi < 18.5) return { label: "Abaixo do peso", color: "text-blue-600" };
     if (bmi < 25) return { label: "Peso normal", color: "text-green-600" };
@@ -141,7 +127,6 @@ export default function Principal() {
     return { label: "Obesidade grau III", color: "text-red-800" };
   };
 
-  // Cálculo de calorias diárias por macros
   const calculateDailyTargets = () => {
     const p = ((protPercent / 100) * calTarget) / 4;
     const f = ((fatPercent / 100) * calTarget) / 9;
@@ -149,19 +134,17 @@ export default function Principal() {
     return { p, f, c, cal: calTarget };
   };
 
-  // Contagem de treinos na semana
+  // Estatísticas de treino
   const weeklyTrainingCount = useMemo(() => {
     if (!weeklyPlan) return 0;
     return Object.values(weeklyPlan).filter(val => val !== "Descanso").length;
   }, [weeklyPlan]);
 
-  // Estatísticas de treino
   const trainingStats = useMemo(() => {
     if (!trainingLogs || trainingLogs.length === 0) return null;
 
     const totalWorkouts = trainingLogs.length;
     
-    // Encontrar último treino
     const lastTraining = [...trainingLogs].sort((a, b) => {
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     })[0];
@@ -173,24 +156,21 @@ export default function Principal() {
     };
   }, [trainingLogs]);
 
-  // Verificar e atualizar sequências (streaks)
+  // Funções para atualizar sequências
   const updateTrainingStreak = () => {
     const currentDate = new Date().toISOString().split('T')[0];
     const newStreaks = { ...streaks };
     
-    // Verificar se a última atualização foi há mais de 48 horas (quebra de sequência)
     const lastUpdate = new Date(streaks.training.lastUpdate);
     const hoursDiff = (today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
     
     if (hoursDiff > 48) {
-      // Reiniciar a sequência
       newStreaks.training = {
         count: 1,
         lastUpdate: today.toISOString(),
         startDate: today.toISOString()
       };
     } else {
-      // Continuar a sequência
       newStreaks.training = {
         count: streaks.training.count + 1,
         lastUpdate: today.toISOString(),
@@ -206,19 +186,16 @@ export default function Principal() {
     const currentDate = new Date().toISOString().split('T')[0];
     const newStreaks = { ...streaks };
     
-    // Verificar se a última atualização foi há mais de 24 horas (quebra de sequência)
     const lastUpdate = new Date(streaks.diet.lastUpdate);
     const hoursDiff = (today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
     
     if (hoursDiff > 24) {
-      // Reiniciar a sequência
       newStreaks.diet = {
         count: 1,
         lastUpdate: today.toISOString(),
         startDate: today.toISOString()
       };
     } else {
-      // Continuar a sequência
       newStreaks.diet = {
         count: streaks.diet.count + 1,
         lastUpdate: today.toISOString(),
@@ -234,19 +211,16 @@ export default function Principal() {
     const currentDate = new Date().toISOString().split('T')[0];
     const newStreaks = { ...streaks };
     
-    // Verificar se a última atualização foi há mais de 24 horas (quebra de sequência)
     const lastUpdate = new Date(streaks.steps?.lastUpdate || new Date(0));
     const hoursDiff = (today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
     
     if (hoursDiff > 24) {
-      // Reiniciar a sequência
       newStreaks.steps = {
         count: 1,
         lastUpdate: today.toISOString(),
         startDate: today.toISOString()
       };
     } else {
-      // Continuar a sequência
       newStreaks.steps = {
         count: (streaks.steps?.count || 0) + 1,
         lastUpdate: today.toISOString(),
@@ -258,9 +232,6 @@ export default function Principal() {
     return newStreaks.steps.count;
   };
 
-  /* =============================
-     3) RENDER
-  ============================== */
   const daily = calculateDailyTargets();
   
   return (
@@ -294,7 +265,7 @@ export default function Principal() {
       {/* Dica do dia */}
       <DailyTip className="mb-2" />
 
-      {/* Sequências (Streaks) */}
+      {/* Sequências */}
       <SectionHeader
         title="As Tuas Sequências"
         icon={<Flame className="text-orange-500" size={20} />}
@@ -453,7 +424,6 @@ export default function Principal() {
             Hoje é o teu dia para recuperação. Aproveita para descansar e preparar-te para o próximo treino!
           </p>
           
-          {/* Adicionando botão para registar streaks mesmo em dias de descanso */}
           <div className="flex justify-center mt-4">
             {alreadyLoggedTrainingToday ? (
               <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-md text-gray-600">
@@ -588,7 +558,7 @@ export default function Principal() {
         </div>
       </Card>
 
-      {/* Nova seção para meta de passos diários */}
+      {/* Meta de passos diários */}
       <SectionHeader 
         title="Meta de Passos Diários"
         icon={<Activity className="text-cyan-500" size={20} />}
@@ -671,7 +641,6 @@ export default function Principal() {
 
       {/* Status & Progresso */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Últimas Medições */}
         <Card className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-medium text-gray-700 flex items-center gap-2">
@@ -744,7 +713,6 @@ export default function Principal() {
           )}
         </Card>
         
-        {/* Status de Treino */}
         <Card className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="font-medium text-gray-700 flex items-center gap-2">

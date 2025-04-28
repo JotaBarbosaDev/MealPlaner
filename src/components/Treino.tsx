@@ -33,12 +33,10 @@ import {
   CircleCheck
 } from "lucide-react";
 
-// Componentes compartilhados
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { StatCard } from "@/components/shared/StatCard";
 import { ExpandableCard } from "@/components/shared/ExpandableCard";
 
-// UI do shadcn
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,9 +58,6 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
-/* -------------------------------------
-   TIPOS de TREINO
---------------------------------------*/
 type DayOfWeek =
   | "Segunda-feira"
   | "Terça-feira"
@@ -104,14 +99,8 @@ interface TrainingLogEntry {
   exerciseLogs: ExerciseLog[];
 }
 
-/* -------------------------------------
-   COMPONENTE PRINCIPAL: Treino()
---------------------------------------*/
 export default function Treino() {
-  /* =============================
-     1) ESTADOS PRINCIPAIS
-  ============================== */
-  // Exercícios
+  // Estados principais
   const [exercises, setExercises] = useLocalStorage<Exercise[]>(
     "exercises",
     []
@@ -166,18 +155,15 @@ export default function Treino() {
   // Para expandir/minimizar logs por data
   const [openLogDates, setOpenLogDates] = useState<string[]>([]);
 
-  // Adicionar estado para exercícios expandidos após os outros estados
+  // Para exercícios expandidos
   const [expandedExercises, setExpandedExercises] = useState<number[]>([]);
 
   // Estado para controlar animações de seções
   const [activeTab, setActiveTab] = useState<"exercises" | "workouts" | "weekly">("exercises");
 
-  // Utilizando o toast do ShadcnUI ao invés do react-toastify
   const { toast } = useToast();
 
-  /* =============================
-     2) FUNÇÕES Exercícios
-  ============================== */
+  // Funções para gerenciar exercícios
   function handleAddExerciseSubmit(e: FormEvent) {
     e.preventDefault();
     if (!exerciseName.trim()) {
@@ -287,9 +273,7 @@ export default function Treino() {
     setExercisePause(60);
   }
 
-  /* =============================
-     3) FUNÇÕES Treinos
-  ============================== */
+  // Funções para gerenciar treinos
   function handleAddWorkoutSubmit(e: FormEvent) {
     e.preventDefault();
     if (!workoutName.trim()) {
@@ -309,7 +293,6 @@ export default function Treino() {
       return;
     }
 
-    // Em vez de guardar o objeto todo do exercício, guardamos apenas os índices
     const workout: Workout = {
       name: workoutName.trim(),
       exerciseIds: selectedExercises,
@@ -387,9 +370,7 @@ export default function Treino() {
     setSelectedExercises([]);
   }
 
-  /* =============================
-     4) PLANO SEMANAL
-  ============================== */
+  // Funções para gerenciar plano semanal
   function renderWeeklyPlan() {
     const days = Object.keys(weeklyPlan) as DayOfWeek[];
     
@@ -472,9 +453,7 @@ export default function Treino() {
     );
   }
 
-  /* =============================
-     5) REGISTO DIÁRIO (séries)
-  ============================== */
+  // Funções para gerenciar registros diários
   function handleSaveSet() {
     if (!currentExercise || !selectedDay) {
       toast({
@@ -783,9 +762,6 @@ export default function Treino() {
     });
   }
 
-  /* =============================
-     6) RENDER FINAL
-  ============================== */
   // Tabs de navegação
   const renderTabs = () => (
     <div className="flex space-x-1 p-1 bg-gray-100 rounded-lg mb-6">
@@ -822,7 +798,6 @@ export default function Treino() {
     if (nameLower.includes("corda") || nameLower.includes("pular")) return "⏱️";
     if (nameLower.includes("cardio")) return "❤️";
     
-    // Emoji padrão para outros exercícios
     return "🏆";
   };
 
