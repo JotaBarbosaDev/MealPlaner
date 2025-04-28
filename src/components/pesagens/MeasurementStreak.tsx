@@ -32,6 +32,11 @@ const DEFAULT_STREAKS: UserStreaks = {
     lastUpdate: new Date().toISOString(),
     startDate: new Date().toISOString(),
   },
+  steps: {
+    count: 0,
+    lastUpdate: new Date().toISOString(),
+    startDate: new Date().toISOString(),
+  }
 };
 
 export function MeasurementStreak({ measurements, className = "" }: MeasurementStreakProps) {

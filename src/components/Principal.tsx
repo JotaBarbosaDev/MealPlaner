@@ -60,8 +60,14 @@ export default function Principal() {
   
   const [streaks, setStreaks] = useLocalStorage<UserStreaks>("streaks", {
     diet: emptyStreak,
-    training: emptyStreak
+    training: emptyStreak,
+    measurements: emptyStreak,
+    steps: emptyStreak
   });
+
+  // Meta de passos diários
+  const [stepsTarget, setStepsTarget] = useLocalStorage<number>("stepsTarget", 10000);
+  const [currentSteps, setCurrentSteps] = useLocalStorage<number>("currentSteps", 0);
 
   /* =============================
      2) CÁLCULOS E AUXILIARES
@@ -95,6 +101,12 @@ export default function Principal() {
   const alreadyLoggedTrainingToday = useMemo(() => {
     if (!streaks || !streaks.training || !streaks.training.lastUpdate) return false;
     const lastUpdateDate = new Date(streaks.training.lastUpdate).toISOString().split('T')[0];
+    return lastUpdateDate === todayDateString;
+  }, [streaks, todayDateString]);
+  
+  const alreadyLoggedStepsToday = useMemo(() => {
+    if (!streaks || !streaks.steps || !streaks.steps.lastUpdate) return false;
+    const lastUpdateDate = new Date(streaks.steps.lastUpdate).toISOString().split('T')[0];
     return lastUpdateDate === todayDateString;
   }, [streaks, todayDateString]);
 
@@ -218,6 +230,34 @@ export default function Principal() {
     return newStreaks.diet.count;
   };
 
+  const updateStepsStreak = () => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    const newStreaks = { ...streaks };
+    
+    // Verificar se a última atualização foi há mais de 24 horas (quebra de sequência)
+    const lastUpdate = new Date(streaks.steps?.lastUpdate || new Date(0));
+    const hoursDiff = (today.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 24) {
+      // Reiniciar a sequência
+      newStreaks.steps = {
+        count: 1,
+        lastUpdate: today.toISOString(),
+        startDate: today.toISOString()
+      };
+    } else {
+      // Continuar a sequência
+      newStreaks.steps = {
+        count: (streaks.steps?.count || 0) + 1,
+        lastUpdate: today.toISOString(),
+        startDate: streaks.steps?.startDate || today.toISOString()
+      };
+    }
+    
+    setStreaks(newStreaks);
+    return newStreaks.steps.count;
+  };
+
   /* =============================
      3) RENDER
   ============================== */
@@ -264,6 +304,7 @@ export default function Principal() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <StreakCard type="training" streak={streaks.training} />
         <StreakCard type="diet" streak={streaks.diet} />
+        <StreakCard type="steps" streak={streaks.steps} />
       </div>
 
       {/* Resumo rápido */}
@@ -541,6 +582,87 @@ export default function Principal() {
               >
                 <CalendarCheck size={16} className="mr-2" />
                 Registar meta cumprida
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Nova seção para meta de passos diários */}
+      <SectionHeader 
+        title="Meta de Passos Diários"
+        icon={<Activity className="text-cyan-500" size={20} />}
+        description="Regista quando atingires a tua meta de passos"
+      />
+      
+      <Card className="p-4">
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-medium text-gray-800 mb-1">Meta Diária de Passos</h3>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={stepsTarget}
+                  onChange={(e) => setStepsTarget(Number(e.target.value))}
+                  min="1000"
+                  step="1000"
+                  max="50000"
+                  className="w-24 border border-gray-300 rounded px-2 py-1 text-right"
+                />
+                <span className="text-gray-500">passos</span>
+              </div>
+            </div>
+            
+            <div className="flex-1 max-w-md">
+              <div className="text-xs text-gray-500 mb-1">Progresso de hoje</div>
+              <input
+                type="range"
+                min="0"
+                max={stepsTarget * 1.5}
+                value={currentSteps}
+                onChange={(e) => setCurrentSteps(Number(e.target.value))}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>0</span>
+                <span>{stepsTarget}</span>
+                <span>{stepsTarget * 1.5}</span>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-xs text-gray-500 mb-1">Passos atuais</div>
+              <div className="text-2xl font-semibold text-cyan-600">
+                {currentSteps.toLocaleString('pt-PT')}
+              </div>
+              <div className={`text-xs ${currentSteps >= stepsTarget ? 'text-green-500' : 'text-gray-500'}`}>
+                {currentSteps >= stepsTarget ? 'Meta atingida!' : `Faltam ${(stepsTarget - currentSteps).toLocaleString('pt-PT')} passos`}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            {alreadyLoggedStepsToday ? (
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-md text-gray-600">
+                <Trophy size={16} className="text-green-600" />
+                <span>Passos já registados hoje!</span>
+              </div>
+            ) : (
+              <Button 
+                onClick={() => {
+                  const newCount = updateStepsStreak();
+                  toast({
+                    title: "Passos Registados",
+                    description: `Sequência atual: ${newCount} ${newCount === 1 ? 'dia' : 'dias'}!`,
+                    duration: 3000
+                  });
+                }}
+                disabled={currentSteps < stepsTarget}
+                className={currentSteps >= stepsTarget ? "bg-cyan-600 hover:bg-cyan-700" : "bg-gray-300 cursor-not-allowed"}
+              >
+                <CalendarCheck size={16} className="mr-2" />
+                Registar meta de passos
               </Button>
             )}
           </div>
